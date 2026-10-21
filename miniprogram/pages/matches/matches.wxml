@@ -1,0 +1,28 @@
+<view class="page">
+  <view wx:if="{{loading}}" class="quiet empty">AI 正在比对附近的物品…</view>
+
+  <block wx:else>
+    <view class="summary">
+      {{matches.length > 0 ? 'AI 找到 ' + matches.length + ' 个可能的匹配' : '暂时还没有匹配的物品'}}
+    </view>
+    <view wx:if="{{matches.length === 0}}" class="quiet hint">
+      发布已经生效。有新的{{isLost ? '拾得者' : '失主'}}上传时，我们会第一时间提醒你。
+    </view>
+
+    <view wx:for="{{matches}}" wx:key="_id" class="card match {{index === 0 ? 'match-top' : ''}}">
+      <view class="match-head">
+        <text class="tag {{isLost ? 'tag-found' : 'tag-lost'}}">相似度 {{item.scoreText}}</text>
+        <text class="quiet">{{item.distanceText}} · {{item.timeText}}</text>
+      </view>
+      <view class="photos">
+        <image class="photo photo-lost" src="{{isLost ? myPhoto : item.photos[0]}}" mode="aspectFill" />
+        <image class="photo photo-found" src="{{isLost ? item.photos[0] : myPhoto}}" mode="aspectFill" />
+      </view>
+      <view class="match-title">{{item.title}}</view>
+      <view class="quiet">{{item.placeName}}</view>
+      <view wx:if="{{isLost && item.verifyQuestion}}" class="verify">
+        <view class="verify-q">拾得者想确认一下：{{item.verifyQuestion}}</view>
+      </view>
+    </view>
+  </block>
+</view>

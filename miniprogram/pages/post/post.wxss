@@ -1,0 +1,52 @@
+.page { padding: 24rpx 40rpx 80rpx; }
+.side-lost { --accent: var(--lost); --accent-tint: var(--lost-tint); --accent-ink: var(--lost-ink); }
+.side-found { --accent: var(--found); --accent-tint: var(--found-tint); --accent-ink: var(--found-ink); }
+
+.photo {
+  height: 320rpx;
+  border: 3rpx dashed var(--accent);
+  border-radius: 32rpx;
+  background: var(--card);
+  overflow: hidden;
+  margin-bottom: 32rpx;
+}
+.photo-img { width: 100%; height: 100%; }
+.photo-empty {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8rpx;
+}
+.photo-title { font-weight: 500; }
+
+.field { margin-bottom: 28rpx; }
+.label { font-size: 26rpx; color: var(--quiet); margin-bottom: 12rpx; }
+.input {
+  height: 96rpx;
+  line-height: 96rpx;
+  border: 1rpx solid var(--line);
+  border-radius: 24rpx;
+  padding: 0 28rpx;
+  background: var(--card);
+}
+
+.rewards { display: flex; gap: 16rpx; }
+.reward {
+  flex: 1;
+  height: 88rpx;
+  line-height: 88rpx;
+  text-align: center;
+  border: 1rpx solid var(--line);
+  border-radius: 24rpx;
+  background: var(--card);
+}
+.reward-on {
+  border: 4rpx solid var(--accent);
+  background: var(--accent-tint);
+  color: var(--accent-ink);
+  font-weight: 700;
+}
+.hint { margin-top: 12rpx; line-height: 1.6; }
+.submit { margin-top: 48rpx; }

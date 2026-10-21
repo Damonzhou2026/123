@@ -1,0 +1,46 @@
+<view class="page {{isLost ? 'side-lost' : 'side-found'}}">
+  <view class="photo" bindtap="choosePhoto">
+    <image wx:if="{{photoPath}}" src="{{photoPath}}" mode="aspectFill" class="photo-img" />
+    <view wx:else class="photo-empty">
+      <view class="photo-title">{{isLost ? '上传物品照片' : '拍一张捡到的东西'}}</view>
+      <view class="quiet">{{isLost ? '以前拍的照片、同款网图都可以' : '证件号、卡号等信息请遮挡后再拍'}}</view>
+    </view>
+  </view>
+
+  <view class="field">
+    <view class="label">物品名称</view>
+    <input class="input" placeholder="比如：一串钥匙，挂着小熊" value="{{title}}" bindinput="onTitle" maxlength="40" />
+  </view>
+
+  <view class="field">
+    <view class="label">类别</view>
+    <picker range="{{categories}}" value="{{categoryIndex}}" bindchange="onCategory">
+      <view class="input">{{categories[categoryIndex]}}</view>
+    </picker>
+  </view>
+
+  <view class="field">
+    <view class="label">{{isLost ? '大概在哪丢的' : '在哪捡到的'}}</view>
+    <view class="input" bindtap="chooseLocation">{{placeName || '点击选择位置'}}</view>
+  </view>
+
+  <view wx:if="{{isLost && rewardAllowed}}" class="field">
+    <view class="label">感谢金（自愿）</view>
+    <view class="rewards">
+      <view wx:for="{{rewardOptions}}" wx:key="*this"
+            class="reward {{reward === item ? 'reward-on' : ''}}"
+            bindtap="onReward" data-value="{{item}}">{{item === 0 ? '不设' : '¥' + item}}</view>
+    </view>
+    <view class="quiet hint">钱先由支付平台托管，你确认拿回物品后才会给到拾得者。</view>
+  </view>
+  <view wx:if="{{isLost && !rewardAllowed}}" class="quiet hint">证件类物品不设感谢金，建议同时联系派出所或场馆服务台。</view>
+
+  <view wx:if="{{!isLost}}" class="field">
+    <view class="label">核验问题（只有失主知道答案）</view>
+    <input class="input" placeholder="比如：钥匙扣上挂的是什么？" value="{{verifyQuestion}}" bindinput="onVerify" maxlength="60" />
+  </view>
+
+  <view class="btn {{isLost ? 'btn-lost' : 'btn-found'}} submit" bindtap="submit">
+    {{submitting ? '发布中…' : (isLost ? '发布并开始 AI 匹配' : '发布，帮它找主人')}}
+  </view>
+</view>

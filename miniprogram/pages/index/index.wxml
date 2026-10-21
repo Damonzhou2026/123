@@ -1,0 +1,37 @@
+<view class="page">
+  <view class="header">
+    <view class="slogan">拍张照，AI 帮你把丢的东西找回来</view>
+  </view>
+
+  <view class="actions">
+    <view class="action action-lost" bindtap="goPost" data-type="lost">
+      <view class="action-title">我丢了东西</view>
+      <view class="action-sub">上传照片，等 AI 匹配</view>
+    </view>
+    <view class="action action-found" bindtap="goPost" data-type="found">
+      <view class="action-title">我捡到东西</view>
+      <view class="action-sub">拍一张，帮它回家</view>
+    </view>
+  </view>
+
+  <view class="section-title">附近刚捡到的</view>
+
+  <view wx:if="{{loading}}" class="quiet empty">正在加载…</view>
+  <view wx:elif="{{locationDenied}}" class="quiet empty">
+    需要位置权限才能看到附近的物品
+    <view class="link" bindtap="openSetting">去开启</view>
+  </view>
+  <view wx:elif="{{items.length === 0}}" class="quiet empty">附近 3 公里内暂时没有人捡到东西</view>
+
+  <view wx:for="{{items}}" wx:key="_id" class="card item">
+    <image class="thumb" src="{{item.photos[0]}}" mode="aspectFill" />
+    <view class="item-body">
+      <view>
+        <text class="tag tag-found">捡到</text>
+        <text class="item-title">{{item.title}}</text>
+      </view>
+      <view class="quiet">{{item.placeName}}</view>
+      <view class="quiet">{{item.timeText}}</view>
+    </view>
+  </view>
+</view>

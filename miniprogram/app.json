@@ -1,0 +1,21 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/post/post",
+    "pages/matches/matches"
+  ],
+  "window": {
+    "navigationBarBackgroundColor": "#FFF8F3",
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "拾光",
+    "backgroundColor": "#FFF8F3"
+  },
+  "permission": {
+    "scope.userLocation": {
+      "desc": "用于记录物品丢失或捡到的位置，并匹配附近的物品"
+    }
+  },
+  "requiredPrivateInfos": ["getLocation", "chooseLocation"],
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

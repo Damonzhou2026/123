@@ -1,0 +1,17 @@
+.page { padding: 24rpx 40rpx 80rpx; }
+.empty { text-align: center; padding: 120rpx 0; }
+.summary { font-size: 36rpx; font-weight: 700; margin-bottom: 16rpx; }
+.hint { line-height: 1.6; }
+
+.match { margin-top: 24rpx; display: flex; flex-direction: column; gap: 16rpx; }
+.match-top { border: 4rpx solid var(--lost); }
+.match-head { display: flex; justify-content: space-between; align-items: center; }
+
+.photos { display: flex; gap: 20rpx; }
+.photo { flex: 1; height: 240rpx; border-radius: 24rpx; box-sizing: border-box; }
+.photo-lost { border: 4rpx solid var(--lost); }
+.photo-found { border: 4rpx solid var(--found); }
+
+.match-title { font-weight: 500; }
+.verify { background: var(--ground); border-radius: 24rpx; padding: 24rpx; }
+.verify-q { font-size: 26rpx; }
