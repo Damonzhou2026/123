@@ -1,0 +1,8 @@
+.page { padding: 24rpx 40rpx 60rpx; }
+.empty { text-align: center; padding: 120rpx 0; }
+.item { display: flex; gap: 24rpx; align-items: center; margin-bottom: 20rpx; }
+.thumb { width: 128rpx; height: 128rpx; border-radius: 24rpx; background: var(--line); flex: none; }
+.item-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8rpx; }
+.item-title { font-weight: 500; margin-left: 12rpx; }
+.status { font-size: 24rpx; color: var(--quiet); }
+.status-matched { color: var(--ink); font-weight: 700; }

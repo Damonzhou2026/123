@@ -4,7 +4,8 @@
   <block wx:else>
     <view wx:if="{{postStatus === 'matched'}}" class="card done">
       <view class="summary">已经配对成功</view>
-      <view class="quiet hint">接下来可以和对方约定交接方式。</view>
+      <view class="quiet hint">接下来和对方约定交接的时间和地点。</view>
+      <navigator class="btn {{isLost ? 'btn-lost' : 'btn-found'}} chat-btn" url="/pages/chat/chat?claimId={{matchedClaimId}}">去聊天</navigator>
     </view>
 
     <!-- 拾得者：别人发来的认领 -->
