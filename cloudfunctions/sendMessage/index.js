@@ -16,7 +16,7 @@ exports.main = async (event) => {
   if (!claim || (claim.claimantOpenid !== OPENID && claim.finderOpenid !== OPENID)) {
     return { ok: false, message: '找不到这段对话' };
   }
-  if (claim.status !== 'approved') return { ok: false, message: '拾得者确认后才能聊天' };
+  if (claim.status !== 'approved' && claim.status !== 'returned') return { ok: false, message: '拾得者确认后才能聊天' };
 
   const { _id } = await db.collection('messages').add({
     data: {

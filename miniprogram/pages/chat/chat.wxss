@@ -58,3 +58,13 @@
   color: #FFFFFF;
   font-weight: 700;
 }
+
+.confirm { margin-top: 20rpx; }
+.rate { margin-top: 20rpx; display: flex; flex-direction: column; gap: 20rpx; }
+.rate-title { font-weight: 700; }
+.stars { display: flex; gap: 12rpx; }
+.star { font-size: 56rpx; color: var(--line); min-width: 72rpx; min-height: 72rpx; text-align: center; }
+.star-on { color: #F59E0B; }
+.tags { display: flex; flex-wrap: wrap; gap: 16rpx; }
+.tag-option { font-size: 24rpx; border: 1rpx solid var(--line); border-radius: 999rpx; padding: 10rpx 24rpx; background: var(--card); }
+.tag-option-on { border-color: var(--mine); color: var(--mine); font-weight: 700; }
