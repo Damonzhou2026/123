@@ -11,6 +11,7 @@ Page({
     loading: true,
     isLost: true,
     postStatus: 'open',
+    matchedClaimId: '',
     myPhoto: '',
     matches: [],
     claims: [],
@@ -47,6 +48,7 @@ Page({
         loading: false,
         isLost: result.post.type === 'lost',
         postStatus: result.post.status,
+        matchedClaimId: result.post.matchedClaimId,
         myPhoto: result.post.photos[0],
         matches,
         claims

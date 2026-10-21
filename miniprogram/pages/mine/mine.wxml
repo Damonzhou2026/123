@@ -1,0 +1,16 @@
+<view class="page">
+  <view wx:if="{{loading}}" class="quiet empty">正在加载…</view>
+  <view wx:elif="{{items.length === 0}}" class="quiet empty">你还没有发布过</view>
+
+  <view wx:for="{{items}}" wx:key="_id" class="card item" bindtap="open" data-index="{{index}}">
+    <image class="thumb" src="{{item.photos[0]}}" mode="aspectFill" />
+    <view class="item-body">
+      <view>
+        <text class="tag {{item.type === 'lost' ? 'tag-lost' : 'tag-found'}}">{{item.type === 'lost' ? '丢了' : '捡到'}}</text>
+        <text class="item-title">{{item.title}}</text>
+      </view>
+      <view class="quiet">{{item.placeName}} · {{item.timeText}}</view>
+      <view class="status {{item.status === 'matched' ? 'status-matched' : ''}}">{{item.statusText}}</view>
+    </view>
+  </view>
+</view>

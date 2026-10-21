@@ -1,0 +1,30 @@
+<view class="page {{role === 'owner' ? 'me-lost' : 'me-found'}}">
+  <view class="item card">
+    <image class="item-photo" src="{{item.photo}}" mode="aspectFill" />
+    <view class="item-body">
+      <view class="item-title">{{item.title}}</view>
+      <view class="quiet">{{role === 'owner' ? '对方捡到了你的东西' : '你捡到的东西，对方是失主'}}</view>
+    </view>
+  </view>
+
+  <view class="notice quiet">
+    聊天不会显示手机号。见面请选人多的公共场所；感谢金在平台托管，不要私下转账。
+  </view>
+
+  <scroll-view class="messages" scroll-y scroll-into-view="{{scrollTo}}">
+    <view wx:if="{{!loading && messages.length === 0}}" class="quiet empty">打个招呼，约一下交接的时间和地点吧</view>
+    <view wx:for="{{messages}}" wx:key="_id" id="m-{{index}}" class="row {{item.mine ? 'row-mine' : ''}}">
+      <view class="bubble {{item.mine ? 'bubble-mine' : 'bubble-other'}}">{{item.text}}</view>
+    </view>
+  </scroll-view>
+
+  <view class="quick">
+    <view wx:for="{{quickReplies}}" wx:key="*this" class="quick-item" bindtap="useQuick" data-text="{{item}}">{{item}}</view>
+  </view>
+
+  <view class="composer">
+    <input class="composer-input" placeholder="发消息…" value="{{draft}}" bindinput="onDraft"
+           confirm-type="send" bindconfirm="send" maxlength="500" />
+    <view class="send" bindtap="send">发送</view>
+  </view>
+</view>
