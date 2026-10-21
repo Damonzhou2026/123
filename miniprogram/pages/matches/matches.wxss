@@ -1,9 +1,10 @@
 .page { padding: 24rpx 40rpx 80rpx; }
 .empty { text-align: center; padding: 120rpx 0; }
-.summary { font-size: 36rpx; font-weight: 700; margin-bottom: 16rpx; }
+.summary { font-size: 36rpx; font-weight: 700; margin: 16rpx 0; }
 .hint { line-height: 1.6; }
+.done { margin-bottom: 24rpx; }
 
-.match { margin-top: 24rpx; display: flex; flex-direction: column; gap: 16rpx; }
+.match, .claim { margin-top: 24rpx; display: flex; flex-direction: column; gap: 16rpx; }
 .match-top { border: 4rpx solid var(--lost); }
 .match-head { display: flex; justify-content: space-between; align-items: center; }
 
@@ -13,5 +14,18 @@
 .photo-found { border: 4rpx solid var(--found); }
 
 .match-title { font-weight: 500; }
-.verify { background: var(--ground); border-radius: 24rpx; padding: 24rpx; }
+.verify { background: var(--ground); border-radius: 24rpx; padding: 24rpx; display: flex; flex-direction: column; gap: 16rpx; }
 .verify-q { font-size: 26rpx; }
+.verify-input {
+  height: 88rpx;
+  border: 1rpx solid var(--line);
+  border-radius: 20rpx;
+  padding: 0 24rpx;
+  background: var(--card);
+}
+.claim-status { color: var(--lost-ink); background: var(--lost-tint); border-radius: 20rpx; padding: 20rpx 24rpx; font-size: 26rpx; }
+
+.answer { font-weight: 500; }
+.claim-actions { display: flex; gap: 20rpx; }
+.claim-actions .btn { flex: 1; }
+.btn-ghost { background: var(--card); color: var(--ink); border: 1rpx solid var(--line); }

@@ -14,6 +14,11 @@ exports.main = async (event) => {
   if (!post) return { ok: false, message: '找不到这条发布' };
   if (post._openid !== OPENID) return { ok: false, message: '只能查看自己发布的匹配' };
 
+  const claims = await loadClaims(post);
+  if (post.status !== 'open') {
+    return { ok: true, post: publicPost(post), matches: [], claims };
+  }
+
   const opposite = post.type === 'lost' ? 'found' : 'lost';
   const createdAt = new Date(post.createdAt).getTime();
 
@@ -48,13 +53,50 @@ exports.main = async (event) => {
       createdAt: c.createdAt,
       distance: c.distance,
       verifyQuestion: c.verifyQuestion || '',
+      claimStatus: claimStatusFor(claims, c._id),
       score,
       imageCompared
     }));
 
-  return {
-    ok: true,
-    post: { _id: post._id, type: post.type, photos: post.photos },
-    matches
-  };
+  return { ok: true, post: publicPost(post), matches, claims };
 };
+
+function publicPost(post) {
+  return { _id: post._id, type: post.type, status: post.status, photos: post.photos };
+}
+
+function claimStatusFor(claims, foundPostId) {
+  const claim = claims.find((c) => c.foundPostId === foundPostId);
+  return claim ? claim.status : '';
+}
+
+// 失主：自己发起过的认领（用来显示“等待确认”）。
+// 拾得者：别人对这件物品的认领，附上失主的照片，方便对比后确认。
+async function loadClaims(post) {
+  const field = post.type === 'lost' ? 'lostPostId' : 'foundPostId';
+  const { data } = await db.collection('claims')
+    .where({ [field]: post._id })
+    .orderBy('createdAt', 'desc')
+    .limit(20)
+    .get();
+  if (post.type === 'lost') {
+    return data.map((c) => ({ _id: c._id, foundPostId: c.foundPostId, status: c.status }));
+  }
+
+  const lostIds = data.map((c) => c.lostPostId);
+  const { data: lostPosts } = lostIds.length
+    ? await db.collection('posts').where({ _id: _.in(lostIds) }).field({ photos: 1, title: 1 }).get()
+    : { data: [] };
+  return data.map((c) => {
+    const lost = lostPosts.find((p) => p._id === c.lostPostId) || {};
+    return {
+      _id: c._id,
+      status: c.status,
+      question: c.question,
+      answer: c.answer,
+      createdAt: c.createdAt,
+      lostTitle: lost.title || '',
+      lostPhoto: (lost.photos || [])[0] || ''
+    };
+  });
+}
