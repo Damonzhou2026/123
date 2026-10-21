@@ -2,7 +2,8 @@ const { timeAgo } = require('../../utils/format');
 
 const STATUS_TEXT = {
   open: '正在匹配',
-  matched: '已配对，点开聊天'
+  matched: '已配对，点开聊天',
+  closed: '已归还'
 };
 
 Page({
@@ -37,7 +38,7 @@ Page({
 
   open(e) {
     const item = this.data.items[e.currentTarget.dataset.index];
-    const url = item.status === 'matched' && item.matchedClaimId
+    const url = item.status !== 'open' && item.matchedClaimId
       ? `/pages/chat/chat?claimId=${item.matchedClaimId}`
       : `/pages/matches/matches?id=${item._id}`;
     wx.navigateTo({ url });

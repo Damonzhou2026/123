@@ -4,8 +4,26 @@
     <view class="item-body">
       <view class="item-title">{{item.title}}</view>
       <view class="quiet">{{role === 'owner' ? '对方捡到了你的东西' : '你捡到的东西，对方是失主'}}</view>
+      <view class="quiet">{{counterpart.count > 0 ? '对方评分 ' + counterpart.rating + ' 分 · ' + counterpart.count + ' 次评价' : '对方还没有评价记录'}}</view>
     </view>
   </view>
+
+  <view wx:if="{{status === 'approved' && role === 'owner'}}" class="btn btn-lost confirm" bindtap="confirmReturn">我已拿回物品</view>
+  <view wx:if="{{status === 'approved' && role === 'finder'}}" class="notice quiet">交接后请失主在这里点“我已拿回物品”。</view>
+
+  <view wx:if="{{status === 'returned' && !rated}}" class="card rate">
+    <view class="rate-title">{{role === 'owner' ? '东西回家了！给对方打个分吧' : '归还完成，给对方打个分吧'}}</view>
+    <view class="stars">
+      <view wx:for="{{[1, 2, 3, 4, 5]}}" wx:key="*this" class="star {{item <= stars ? 'star-on' : ''}}"
+            bindtap="pickStar" data-value="{{item}}">★</view>
+    </view>
+    <view class="tags">
+      <view wx:for="{{tagOptions}}" wx:key="name" class="tag-option {{item.on ? 'tag-option-on' : ''}}"
+            bindtap="toggleTag" data-index="{{index}}">{{item.name}}</view>
+    </view>
+    <view class="btn {{role === 'owner' ? 'btn-lost' : 'btn-found'}}" bindtap="submitRating">提交评价</view>
+  </view>
+  <view wx:if="{{status === 'returned' && rated}}" class="notice quiet">已评价，谢谢你让这件东西回家。</view>
 
   <view class="notice quiet">
     聊天不会显示手机号。见面请选人多的公共场所；感谢金在平台托管，不要私下转账。

@@ -20,10 +20,20 @@ exports.main = async (event) => {
     .limit(PAGE_SIZE)
     .get();
 
+  const counterpartOpenid = claim.claimantOpenid === OPENID ? claim.finderOpenid : claim.claimantOpenid;
+  const [counterpart, myRating] = await Promise.all([
+    db.collection('users').doc(counterpartOpenid).get().then((r) => r.data).catch(() => null),
+    db.collection('ratings').doc(`${claim._id}_${OPENID}`).get().then((r) => r.data).catch(() => null)
+  ]);
+
   return {
     ok: true,
     role: claim.claimantOpenid === OPENID ? 'owner' : 'finder',
     status: claim.status,
+    rated: !!myRating,
+    counterpart: counterpart && counterpart.ratingCount
+      ? { rating: Math.round((counterpart.ratingSum / counterpart.ratingCount) * 10) / 10, count: counterpart.ratingCount }
+      : { rating: null, count: 0 },
     item: { title: found.title || '', photo: (found.photos || [])[0] || '', placeName: found.placeName || '' },
     messages: data.reverse().map((m) => ({
       _id: m._id,
