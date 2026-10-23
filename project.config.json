@@ -1,5 +1,5 @@
 {
-  "description": "拾光：拍照找回失物",
+  "description": "掉了么：拍照找回失物",
   "miniprogramRoot": "miniprogram/",
   "cloudfunctionRoot": "cloudfunctions/",
   "compileType": "miniprogram",
