@@ -1,5 +1,5 @@
 // 云开发环境 ID：在微信开发者工具「云开发」控制台创建环境后填入
-const CLOUD_ENV = 'your-cloud-env-id';
+const CLOUD_ENV = 'cloud1-d4gtwztiq15ec41d4';
 
 App({
   onLaunch() {
