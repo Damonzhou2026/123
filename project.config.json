@@ -3,7 +3,7 @@
   "miniprogramRoot": "miniprogram/",
   "cloudfunctionRoot": "cloudfunctions/",
   "compileType": "miniprogram",
-  "appid": "touristappid",
+  "appid": "wx68d39aac44655a03",
   "projectname": "shiguang",
   "setting": {
     "es6": true,
