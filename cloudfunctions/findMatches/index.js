@@ -58,6 +58,10 @@ exports.main = async (event) => {
       imageCompared
     }));
 
+  // 对方的照片换成临时链接
+  const urls = await toTempUrls(matches.map((m) => (m.photos || [])[0]));
+  matches.forEach((m) => { m.photos = (m.photos || []).map((id) => urls[id] || id); });
+
   return { ok: true, post: publicPost(post), matches, claims };
 };
 
@@ -87,8 +91,10 @@ async function loadClaims(post) {
   const { data: lostPosts } = lostIds.length
     ? await db.collection('posts').where({ _id: _.in(lostIds) }).field({ photos: 1, title: 1 }).get()
     : { data: [] };
+  const urls = await toTempUrls(lostPosts.map((p) => (p.photos || [])[0]));
   return data.map((c) => {
     const lost = lostPosts.find((p) => p._id === c.lostPostId) || {};
+    const lostPhoto = (lost.photos || [])[0] || '';
     return {
       _id: c._id,
       status: c.status,
@@ -96,7 +102,18 @@ async function loadClaims(post) {
       answer: c.answer,
       createdAt: c.createdAt,
       lostTitle: lost.title || '',
-      lostPhoto: (lost.photos || [])[0] || ''
+      lostPhoto: urls[lostPhoto] || lostPhoto
     };
   });
+}
+
+// 照片存的是云存储 fileID。免费套餐不能把存储权限改成“所有用户可读”，
+// 对方直接用 fileID 看不到图，所以由云函数换成临时链接再返回。
+async function toTempUrls(fileIDs) {
+  const ids = [...new Set(fileIDs.filter((id) => typeof id === 'string' && id.startsWith('cloud://')))];
+  if (ids.length === 0) return {};
+  const { fileList } = await cloud.getTempFileURL({ fileList: ids });
+  const urls = {};
+  fileList.forEach((f) => { if (f.tempFileURL) urls[f.fileID] = f.tempFileURL; });
+  return urls;
 }
