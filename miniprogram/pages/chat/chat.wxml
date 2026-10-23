@@ -11,7 +11,7 @@
   <view wx:if="{{reward.amount > 0}}" class="card reward {{role === 'owner' ? 'reward-lost' : 'reward-found'}}">
     <view class="reward-amount">感谢金 ¥{{reward.amount}}</view>
     <view class="quiet">{{rewardText}}</view>
-    <view wx:if="{{role === 'owner' && status === 'approved' && (reward.status === 'none' || reward.status === 'created')}}"
+    <view wx:if="{{escrow && role === 'owner' && status === 'approved' && (reward.status === 'none' || reward.status === 'created')}}"
           class="btn btn-lost" bindtap="payReward">支付 ¥{{reward.amount}} 托管</view>
   </view>
 
@@ -33,7 +33,7 @@
   <view wx:if="{{status === 'returned' && rated}}" class="notice quiet">已评价，谢谢你让这件东西回家。</view>
 
   <view class="notice quiet">
-    聊天不会显示手机号。见面请选人多的公共场所；感谢金在平台托管，不要私下转账。
+    聊天不会显示手机号。见面请选人多的公共场所；不要在见面前转账，也不要交押金。
   </view>
 
   <scroll-view class="messages" scroll-y scroll-into-view="{{scrollTo}}">

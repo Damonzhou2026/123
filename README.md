@@ -27,6 +27,8 @@
 
 ## 感谢金（微信支付分账）
 
+> 目前托管是关着的（`miniprogram/utils/constants.js` 里 `ESCROW_ENABLED = false`）。普通商户的分账比例上限是 30%，不够把 90% 分给拾得者，所以第一版感谢金由失主线下直接给。接好持牌分账服务商后再打开。
+
 代码在 `cloudfunctions/reward`。商户号要先开通“分账”，并且绑定这个小程序的 AppID。
 
 在云开发控制台给 `reward` 云函数配置这些**环境变量**（不要写进代码）：
