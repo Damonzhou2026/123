@@ -17,8 +17,13 @@ exports.main = async (event) => {
       await tx.collection('posts').doc(claim.lostPostId).update({ data: { status: 'closed' } });
       await tx.collection('posts').doc(claim.foundPostId).update({ data: { status: 'closed' } });
     });
-    return { ok: true };
   } catch (err) {
     return { ok: false, message: typeof err === 'string' ? err : (err.message || '操作失败') };
   }
+
+  // 有托管的感谢金就分给拾得者。失败不影响确认，聊天页之后会再重试。
+  const settled = await cloud.callFunction({ name: 'reward', data: { action: 'settle', claimId: event.claimId } })
+    .then((r) => r.result)
+    .catch((err) => ({ ok: false, message: err.message }));
+  return { ok: true, reward: settled };
 };

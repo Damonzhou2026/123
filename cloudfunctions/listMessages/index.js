@@ -21,9 +21,11 @@ exports.main = async (event) => {
     .get();
 
   const counterpartOpenid = claim.claimantOpenid === OPENID ? claim.finderOpenid : claim.claimantOpenid;
-  const [counterpart, myRating] = await Promise.all([
+  const [counterpart, myRating, lost, payment] = await Promise.all([
     db.collection('users').doc(counterpartOpenid).get().then((r) => r.data).catch(() => null),
-    db.collection('ratings').doc(`${claim._id}_${OPENID}`).get().then((r) => r.data).catch(() => null)
+    db.collection('ratings').doc(`${claim._id}_${OPENID}`).get().then((r) => r.data).catch(() => null),
+    db.collection('posts').doc(claim.lostPostId).get().then((r) => r.data).catch(() => ({})),
+    db.collection('payments').doc(claim._id).get().then((r) => r.data).catch(() => null)
   ]);
 
   return {
@@ -34,6 +36,8 @@ exports.main = async (event) => {
     counterpart: counterpart && counterpart.ratingCount
       ? { rating: Math.round((counterpart.ratingSum / counterpart.ratingCount) * 10) / 10, count: counterpart.ratingCount }
       : { rating: null, count: 0 },
+    // 感谢金：失主设置的金额，和托管状态（none 未付 / created 待支付 / paid 已托管 / settling 分账中 / settled 已到账）
+    reward: { amount: lost.reward || 0, status: payment ? payment.status : 'none' },
     item: { title: found.title || '', photo: (found.photos || [])[0] || '', placeName: found.placeName || '' },
     messages: data.reverse().map((m) => ({
       _id: m._id,

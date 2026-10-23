@@ -8,6 +8,13 @@
     </view>
   </view>
 
+  <view wx:if="{{reward.amount > 0}}" class="card reward {{role === 'owner' ? 'reward-lost' : 'reward-found'}}">
+    <view class="reward-amount">感谢金 ¥{{reward.amount}}</view>
+    <view class="quiet">{{rewardText}}</view>
+    <view wx:if="{{role === 'owner' && status === 'approved' && (reward.status === 'none' || reward.status === 'created')}}"
+          class="btn btn-lost" bindtap="payReward">支付 ¥{{reward.amount}} 托管</view>
+  </view>
+
   <view wx:if="{{status === 'approved' && role === 'owner'}}" class="btn btn-lost confirm" bindtap="confirmReturn">我已拿回物品</view>
   <view wx:if="{{status === 'approved' && role === 'finder'}}" class="notice quiet">交接后请失主在这里点“我已拿回物品”。</view>
 
