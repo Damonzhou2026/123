@@ -1,9 +1,15 @@
 // 云数据库集合只允许云函数访问，所以聊天页定时拉取新消息
+const { ESCROW_ENABLED } = require('../../utils/constants');
+
 const POLL_MS = 3000;
 const TAGS = ['守时', '热心', '沟通顺畅', '物品完好', '有礼貌'];
 
 // 感谢金状态的说明文字，按“我是谁”区分
 function rewardText(role, claimStatus, rewardStatus) {
+  if (!ESCROW_ENABLED) {
+    if (claimStatus === 'returned') return role === 'owner' ? '如果还没给，记得把感谢金给对方。' : '感谢金由失主直接给你。';
+    return role === 'owner' ? '交接时当面给，或用微信直接转给对方。平台不经手这笔钱。' : '失主表示愿意给这笔感谢金，交接时由失主直接给你。';
+  }
   if (rewardStatus === 'settled') return role === 'owner' ? '已经分给对方，谢谢你。' : '已到账，请在微信零钱里查看。';
   if (rewardStatus === 'paid' || rewardStatus === 'settling') {
     if (claimStatus === 'returned') return '正在分给拾得者，一般几分钟内到账。';
@@ -22,6 +28,7 @@ Page({
     counterpart: { rating: null, count: 0 },
     reward: { amount: 0, status: 'none' },
     rewardText: '',
+    escrow: ESCROW_ENABLED,
     stars: 5,
     tagOptions: TAGS.map((name) => ({ name, on: false })),
     item: {},
@@ -88,6 +95,7 @@ Page({
 
   // 补救：订单状态没同步的先同步；确认拿回时分账失败的，打开聊天页时补一次
   retrySettle(result) {
+    if (!ESCROW_ENABLED) return;
     // 付过款但没来得及记下来（比如付款后小程序被关掉），先同步一次订单状态
     if (!this.syncTried && result.reward.status === 'created') {
       this.syncTried = true;
