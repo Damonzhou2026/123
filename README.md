@@ -22,6 +22,7 @@
 2. 在[微信公众平台](https://mp.weixin.qq.com/)注册小程序，把 AppID 填进 `project.config.json` 的 `appid`。
 3. 在开发者工具里点“云开发”，创建一个环境，把环境 ID 填进 `miniprogram/app.js` 的 `CLOUD_ENV`。
 4. 在云开发控制台的数据库里新建集合 `posts`、`claims`、`messages`、`ratings`、`users` 和 `payments`，并给 `posts` 的 `location` 字段加一个**地理位置索引**（附近查询要用到）。这几个集合的权限都设成“所有用户不可读写”，只让云函数访问。
+   再到「存储 → 权限设置」里选“所有用户可读，仅创建者可读写”，否则对方看不到你上传的照片。
 5. 在 `cloudfunctions` 下面的每个文件夹上分别右键，选“上传并部署：云端安装依赖”。
 6. 点“编译”，就能在模拟器或手机上预览。
 
