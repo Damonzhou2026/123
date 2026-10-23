@@ -68,3 +68,8 @@
 .tags { display: flex; flex-wrap: wrap; gap: 16rpx; }
 .tag-option { font-size: 24rpx; border: 1rpx solid var(--line); border-radius: 999rpx; padding: 10rpx 24rpx; background: var(--card); }
 .tag-option-on { border-color: var(--mine); color: var(--mine); font-weight: 700; }
+
+.reward { margin-top: 20rpx; display: flex; flex-direction: column; gap: 12rpx; }
+.reward-lost { background: var(--lost-tint); border-color: var(--lost-tint); }
+.reward-found { background: var(--found-tint); border-color: var(--found-tint); }
+.reward-amount { font-size: 34rpx; font-weight: 700; }
