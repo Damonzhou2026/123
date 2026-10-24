@@ -6,7 +6,7 @@ const db = cloud.database();
 
 const CATEGORIES = ['钥匙', '手机', '耳机', '钱包', '证件', '包', '水杯', '玩具', '衣物', '其他'];
 const NO_REWARD_CATEGORIES = ['证件'];
-const MAX_REWARD = 10000;
+const MAX_REWARD = 10000; // 元，和 miniprogram/utils/constants.js 保持一致
 
 function validate(e) {
   if (e.type !== 'lost' && e.type !== 'found') return '类型错误';
@@ -16,7 +16,7 @@ function validate(e) {
   if (typeof e.latitude !== 'number' || typeof e.longitude !== 'number') return '请选择位置';
   if (e.type === 'found' && (typeof e.verifyQuestion !== 'string' || !e.verifyQuestion.trim())) return '请设置核验问题';
   if (e.type === 'lost') {
-    if (!Number.isInteger(e.reward) || e.reward < 0 || e.reward > MAX_REWARD) return '感谢金金额不正确';
+    if (!Number.isInteger(e.reward) || e.reward < 0 || e.reward > MAX_REWARD) return `感谢金请填 0～${MAX_REWARD} 的整数`;
     if (e.reward > 0 && NO_REWARD_CATEGORIES.includes(e.category)) return '证件类物品不设感谢金';
   }
   return '';
