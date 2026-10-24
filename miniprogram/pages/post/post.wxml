@@ -17,6 +17,8 @@
     <picker range="{{categories}}" value="{{categoryIndex}}" bindchange="onCategory">
       <view class="input">{{categories[categoryIndex]}}</view>
     </picker>
+    <input wx:if="{{categories[categoryIndex] === otherCategory}}" class="input custom-category" placeholder="具体是什么？比如：雨伞、充电宝"
+           value="{{customCategory}}" bindinput="onCustomCategory" maxlength="{{maxCustomCategory}}" focus="{{categories[categoryIndex] === otherCategory}}" />
   </view>
 
   <view class="field">

@@ -1,11 +1,14 @@
-const { CATEGORIES, NO_REWARD_CATEGORIES, MAX_REWARD } = require('../../utils/constants');
+const { CATEGORIES, OTHER_CATEGORY, MAX_CUSTOM_CATEGORY, NO_REWARD_CATEGORIES, MAX_REWARD } = require('../../utils/constants');
 const { askMessageNotify } = require('../../utils/notify');
 
 Page({
   data: {
     isLost: true,
     categories: CATEGORIES,
+    otherCategory: OTHER_CATEGORY,
+    maxCustomCategory: MAX_CUSTOM_CATEGORY,
     categoryIndex: 0,
+    customCategory: '',
     photoPath: '',
     title: '',
     placeName: '',
@@ -43,6 +46,7 @@ Page({
 
   onTitle(e) { this.setData({ title: e.detail.value }); },
   onVerify(e) { this.setData({ verifyQuestion: e.detail.value }); },
+  onCustomCategory(e) { this.setData({ customCategory: e.detail.value }); },
 
   onCategory(e) {
     const categoryIndex = Number(e.detail.value);
@@ -66,6 +70,10 @@ Page({
     return amount >= 1 && amount <= MAX_REWARD ? amount : null;
   },
 
+  isOtherCategory() {
+    return CATEGORIES[this.data.categoryIndex] === OTHER_CATEGORY;
+  },
+
   async chooseLocation() {
     try {
       const loc = await wx.chooseLocation();
@@ -79,6 +87,7 @@ Page({
     const d = this.data;
     if (!d.photoPath) return '请先上传照片';
     if (!d.title.trim()) return '请填写物品名称';
+    if (this.isOtherCategory() && !d.customCategory.trim()) return '请填写具体是什么东西';
     if (d.latitude == null) return '请选择位置';
     if (!d.isLost && !d.verifyQuestion.trim()) return '请设置一个核验问题，防止被冒领';
     if (this.rewardAmount() === null) return `感谢金请填 1～${MAX_REWARD} 的整数`;
@@ -108,6 +117,7 @@ Page({
           type: d.isLost ? 'lost' : 'found',
           title: d.title.trim(),
           category: d.categories[d.categoryIndex],
+          customCategory: this.isOtherCategory() ? d.customCategory.trim() : '',
           photos: [upload.fileID],
           placeName: d.placeName,
           latitude: d.latitude,

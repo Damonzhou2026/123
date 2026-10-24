@@ -5,6 +5,8 @@ cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 const db = cloud.database();
 
 const CATEGORIES = ['钥匙', '手机', '耳机', '钱包', '证件', '包', '水杯', '玩具', '衣物', '其他'];
+const OTHER_CATEGORY = '其他';
+const MAX_CUSTOM_CATEGORY = 10; // 字，和 miniprogram/utils/constants.js 保持一致
 const NO_REWARD_CATEGORIES = ['证件'];
 const MAX_REWARD = 10000; // 元，和 miniprogram/utils/constants.js 保持一致
 
@@ -12,6 +14,10 @@ function validate(e) {
   if (e.type !== 'lost' && e.type !== 'found') return '类型错误';
   if (typeof e.title !== 'string' || !e.title.trim() || e.title.length > 40) return '请填写物品名称（40 字以内）';
   if (!CATEGORIES.includes(e.category)) return '类别错误';
+  if (e.category === OTHER_CATEGORY) {
+    const custom = typeof e.customCategory === 'string' ? e.customCategory.trim() : '';
+    if (!custom || custom.length > MAX_CUSTOM_CATEGORY) return `请填写具体是什么东西（${MAX_CUSTOM_CATEGORY} 字以内）`;
+  }
   if (!Array.isArray(e.photos) || e.photos.length === 0 || e.photos.length > 3) return '请上传 1～3 张照片';
   if (typeof e.latitude !== 'number' || typeof e.longitude !== 'number') return '请选择位置';
   if (e.type === 'found' && (typeof e.verifyQuestion !== 'string' || !e.verifyQuestion.trim())) return '请设置核验问题';
@@ -34,6 +40,8 @@ exports.main = async (event) => {
     type: event.type,
     title: event.title.trim(),
     category: event.category,
+    // 类别选「其他」时用户自己填的名称；匹配仍按 category 比较，不受影响
+    customCategory: event.category === OTHER_CATEGORY ? event.customCategory.trim() : '',
     photos: event.photos,
     placeName: String(event.placeName || '').slice(0, 60),
     location: db.Geo.Point(event.longitude, event.latitude),
