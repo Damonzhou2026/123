@@ -26,5 +26,18 @@ exports.main = async (event) => {
     .project({ title: 1, category: 1, photos: 1, placeName: 1, createdAt: 1, distance: 1 })
     .end();
 
-  return { ok: true, items: list };
+  const urls = await toTempUrls(list.map((p) => (p.photos || [])[0]));
+  const items = list.map((p) => ({ ...p, photos: (p.photos || []).map((id) => urls[id] || id) }));
+  return { ok: true, items };
 };
+
+// 照片存的是云存储 fileID。免费套餐不能把存储权限改成“所有用户可读”，
+// 对方直接用 fileID 看不到图，所以由云函数换成临时链接再返回。
+async function toTempUrls(fileIDs) {
+  const ids = [...new Set(fileIDs.filter((id) => typeof id === 'string' && id.startsWith('cloud://')))];
+  if (ids.length === 0) return {};
+  const { fileList } = await cloud.getTempFileURL({ fileList: ids });
+  const urls = {};
+  fileList.forEach((f) => { if (f.tempFileURL) urls[f.fileID] = f.tempFileURL; });
+  return urls;
+}

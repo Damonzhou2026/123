@@ -28,6 +28,9 @@ exports.main = async (event) => {
     db.collection('payments').doc(claim._id).get().then((r) => r.data).catch(() => null)
   ]);
 
+  const photo = (found.photos || [])[0] || '';
+  const urls = await toTempUrls([photo]);
+
   return {
     ok: true,
     role: claim.claimantOpenid === OPENID ? 'owner' : 'finder',
@@ -38,7 +41,7 @@ exports.main = async (event) => {
       : { rating: null, count: 0 },
     // 感谢金：失主设置的金额，和托管状态（none 未付 / created 待支付 / paid 已托管 / settling 分账中 / settled 已到账）
     reward: { amount: lost.reward || 0, status: payment ? payment.status : 'none' },
-    item: { title: found.title || '', photo: (found.photos || [])[0] || '', placeName: found.placeName || '' },
+    item: { title: found.title || '', photo: urls[photo] || photo, placeName: found.placeName || '' },
     messages: data.reverse().map((m) => ({
       _id: m._id,
       text: m.text,
@@ -47,3 +50,14 @@ exports.main = async (event) => {
     }))
   };
 };
+
+// 照片存的是云存储 fileID。免费套餐不能把存储权限改成“所有用户可读”，
+// 对方直接用 fileID 看不到图，所以由云函数换成临时链接再返回。
+async function toTempUrls(fileIDs) {
+  const ids = [...new Set(fileIDs.filter((id) => typeof id === 'string' && id.startsWith('cloud://')))];
+  if (ids.length === 0) return {};
+  const { fileList } = await cloud.getTempFileURL({ fileList: ids });
+  const urls = {};
+  fileList.forEach((f) => { if (f.tempFileURL) urls[f.fileID] = f.tempFileURL; });
+  return urls;
+}
