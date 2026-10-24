@@ -64,4 +64,13 @@ const otherKeys = scoreMatch(
 );
 assert.ok(otherKeys.score < 0.4, `other-keys score ${otherKeys.score}`);
 
+// 不同来源的向量不比；智谱的门槛更高
+assert.strictEqual(
+  imageSimilarity({ embeddingSource: 'zhipu', embeddings: [unit(0)] }, { embeddingSource: 'dashscope', embeddings: [unit(0)] }),
+  null
+);
+const cos50 = unit(Math.acos(0.5) * 180 / Math.PI);
+assert.strictEqual(imageSimilarity({ embeddingSource: 'zhipu', embeddings: [unit(0)] }, { embeddingSource: 'zhipu', embeddings: [cos50] }), 0);
+assert.ok(imageSimilarity({ embeddingSource: 'dashscope', embeddings: [unit(0)] }, { embeddingSource: 'dashscope', embeddings: [cos50] }) > 0.2);
+
 console.log('scoring tests passed');

@@ -28,7 +28,7 @@ exports.main = async (event) => {
 
   const { OPENID } = cloud.getWXContext();
   const { fileList } = await cloud.getTempFileURL({ fileList: event.photos });
-  const embeddings = await fetchEmbeddings(fileList.map((f) => f.tempFileURL).filter(Boolean));
+  const vision = await fetchEmbeddings(fileList.map((f) => f.tempFileURL));
 
   const doc = {
     _openid: OPENID,
@@ -41,8 +41,11 @@ exports.main = async (event) => {
     // 感谢金只由失主自愿设置；拾得者不能定价
     reward: event.type === 'lost' ? event.reward : 0,
     verifyQuestion: event.type === 'found' ? event.verifyQuestion.trim().slice(0, 60) : '',
-    // 每张照片一个特征向量，findMatches 用来看图比对
-    embeddings,
+    // 照片特征向量，findMatches 用来看图比对；只有同一来源的向量能互相比
+    embeddings: vision.embeddings,
+    embeddingSource: vision.source,
+    // 智谱看图写的物品描述，只存不返回，方便以后排查匹配效果
+    photoDescription: vision.description,
     status: 'open',
     createdAt: db.serverDate()
   };

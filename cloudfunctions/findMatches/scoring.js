@@ -18,10 +18,14 @@ function cosine(a, b) {
   return dot / Math.sqrt(na * nb);
 }
 
-// 图片向量模型给两张无关照片的余弦值通常也有 0.3～0.4，同一件东西一般在 0.8 以上。
-// 低于 COS_LOW 记 0 分，高于 COS_HIGH 记满分，中间线性。真实数据多了以后再微调。
-const COS_LOW = 0.4;
-const COS_HIGH = 0.85;
+// 余弦值低于 low 记 0 分，高于 high 记满分，中间线性。真实数据多了以后再微调。
+// 百炼直接比照片：两张无关照片通常也有 0.3～0.4，同一件东西一般在 0.8 以上。
+// 智谱比的是看图写出的描述：同类物品的描述本来就像（都是“黑色钱包”），所以门槛更高。
+const COS_RANGE = {
+  dashscope: { low: 0.4, high: 0.85 },
+  zhipu: { low: 0.6, high: 0.92 }
+};
+const DEFAULT_RANGE = COS_RANGE.dashscope;
 
 function photoVectors(post) {
   if (Array.isArray(post.embeddings) && post.embeddings.length > 0) return post.embeddings;
@@ -32,6 +36,9 @@ function photoVectors(post) {
 
 // 两边各有 1～3 张照片，取最像的一对
 function imageSimilarity(post, candidate) {
+  // 不同模型的向量不能比
+  if ((post.embeddingSource || '') !== (candidate.embeddingSource || '')) return null;
+  const range = COS_RANGE[post.embeddingSource] || DEFAULT_RANGE;
   let best = null;
   photoVectors(post).forEach((a) => {
     photoVectors(candidate).forEach((b) => {
@@ -40,7 +47,7 @@ function imageSimilarity(post, candidate) {
     });
   });
   if (best == null) return null;
-  return clamp01((best - COS_LOW) / (COS_HIGH - COS_LOW));
+  return clamp01((best - range.low) / (range.high - range.low));
 }
 
 function clamp01(x) {
