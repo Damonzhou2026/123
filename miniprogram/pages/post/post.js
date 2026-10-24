@@ -1,4 +1,5 @@
 const { CATEGORIES, NO_REWARD_CATEGORIES } = require('../../utils/constants');
+const { askMessageNotify } = require('../../utils/notify');
 
 Page({
   data: {
@@ -74,6 +75,8 @@ Page({
       return;
     }
     const d = this.data;
+    // 捡到东西的人：有人来认领时要提醒他，先问要不要收提醒
+    if (!d.isLost) await askMessageNotify();
     this.setData({ submitting: true });
     try {
       const ext = d.photoPath.split('.').pop();
