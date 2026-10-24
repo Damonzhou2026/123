@@ -6,7 +6,7 @@
 
 - 首页：“我丢了东西”（橙色）和“我捡到东西”（蓝色）两个入口，以及附近 3 公里内刚捡到的物品列表
 - 发布页：上传照片、名称、类别、位置；失主可以自愿设置感谢金（证件类不设）；拾得者必须设置一个核验问题，防止冒领
-- 匹配页：按图片相似度、类别、距离（5 公里内）、时间（14 天内）打分，列出最可能的物品
+- 匹配页：AI 看图比对照片，再结合类别、距离（5 公里内）、时间（14 天内）打分，列出最可能的物品
 - 认领核验：失主在匹配页回答拾得者的核验问题，拾得者对比两张照片和答案后确认或拒绝；确认后两条发布配对成功，其他人的认领自动拒绝
 
 - 私信：配对成功后双方在应用里聊天，约交接时间和地点，不暴露手机号；聊天页每 3 秒拉一次新消息
@@ -52,15 +52,39 @@
 
 ## AI 图片匹配
 
-`createPost` 云函数会把照片发给一个图像特征服务，拿回特征向量后存起来，`findMatches` 用余弦相似度比较两张图。
+发布时，`createPost` 让 AI 看照片，把结果变成特征向量存进 `posts` 的 `embeddings` 字段（来源记在 `embeddingSource`）。`findMatches` 拿两边的向量比较，取最像的一对，再和类别、距离、时间一起打分（照片占 60%）。支持两家，在 `createPost` 云函数的环境变量里配一个 Key 就行：
 
-- 在 `createPost` 云函数的环境变量里配置 `EMBEDDING_API_URL`。服务约定是：`POST {"imageUrl": "..."}`，返回 `{"embedding": [...]}`。可以用 CLIP 一类的模型自己部署，也可以接云厂商的图像特征接口。
-- 没配置的时候，匹配只按类别、距离和时间打分，结果里 `imageCompared` 为 `false`。
+| | 智谱（`ZHIPU_API_KEY`） | 阿里云百炼（`DASHSCOPE_API_KEY`） |
+| --- | --- | --- |
+| 做法 | 免费的 GLM-4.6V-Flash 看图写一段物品描述（种类、颜色、牌子、特征），再用 embedding-3 变成向量 | 通义多模态向量直接把每张照片变成向量 |
+| 费用 | 看图免费，向量 0.5 元 / 百万 Token，基本为零 | 每张照片约 0.0002 元，1 万张约 2 元 |
+| 擅长 | 认得出“是什么、什么颜色、什么牌子、有什么字” | 外观细节（花纹、形状、挂件）更敏感 |
+| 速度 | 发布时多等 2～5 秒 | 发布时多等 1～2 秒 |
+
+两个都配时用百炼。两家的向量不能互相比，所以中途换了以后，旧帖子只能和旧帖子比照片。
+
+### 用智谱（已有 Key 就用这个）
+
+1. 登录[智谱开放平台](https://bigmodel.cn/)，右上角头像 →“API Key”，复制一个已有的 Key（或新建一个）。这个 Key 不要发给别人，也不要写进代码。
+2. 账户里留一点余额（几块钱足够很久），embedding-3 要扣费；看图用的 GLM-4.6V-Flash 免费。
+3. 打开微信开发者工具，点上方“云开发”进入云开发控制台 →“云函数”→ 点 `createPost` →“配置”（或“版本与配置”）→ 找到“环境变量”，新增一项：名称 `ZHIPU_API_KEY`，值填第 1 步的 Key，保存。
+4. 回到开发者工具，在 `cloudfunctions/createPost` 和 `cloudfunctions/findMatches` 文件夹上分别右键，“上传并部署：云端安装依赖”。（`createPost` 的超时已在 `config.json` 里设为 20 秒。）
+5. 发一条新的失物和一条新的拾物试试。匹配卡片上写“看图匹配 xx%”就说明用上了；写“匹配度 xx%”说明没比对照片（没配好 Key，或者是配置之前发的旧帖子）。想看 AI 把照片看成了什么，可以在云开发控制台的数据库里打开 `posts`，看那条记录的 `photoDescription`。
+
+### 用阿里云百炼
+
+1. 登录[阿里云](https://www.aliyun.com/)，完成实名认证。
+2. 打开[百炼控制台](https://bailian.console.aliyun.com/)，开通服务，地域选“华北 2（北京）”。
+3. 创建 API-KEY，复制 `sk-` 开头的那串字符；在阿里云账户里充几块钱。
+4. 按上面第 3～5 步操作，环境变量名称换成 `DASHSCOPE_API_KEY`。
+
+接口出错时（Key 填错、余额不足）不影响发布，只是这条不比照片，错误会记在 `createPost` 的云函数日志里。
 
 打分逻辑在 `cloudfunctions/findMatches/scoring.js`。测试：
 
 ```
 node cloudfunctions/findMatches/scoring.test.js
+node cloudfunctions/createPost/embedding.test.js
 node cloudfunctions/rateUser/validate.test.js
 node cloudfunctions/reward/reward.test.js
 ```
