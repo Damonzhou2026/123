@@ -11,4 +11,7 @@ const ESCROW_ENABLED = false;
 // 新消息提醒用的订阅消息模板 ID：微信公众平台 →“订阅消息”→“我的模板”里复制。留空就不弹授权框、不推送
 const MESSAGE_TEMPLATE_ID = 'hBMhed6IMwA5n-jwsSYO1ZUUEL7AB9VUPa71JrQl_xA';
 
-module.exports = { CATEGORIES, NO_REWARD_CATEGORIES, ESCROW_ENABLED, MESSAGE_TEMPLATE_ID };
+// 感谢金上限（元），和 cloudfunctions/createPost 里的 MAX_REWARD 保持一致
+const MAX_REWARD = 10000;
+
+module.exports = { CATEGORIES, NO_REWARD_CATEGORIES, MAX_REWARD, ESCROW_ENABLED, MESSAGE_TEMPLATE_ID };

@@ -28,8 +28,14 @@
     <view class="label">感谢金（自愿）</view>
     <view class="rewards">
       <view wx:for="{{rewardOptions}}" wx:key="*this"
-            class="reward {{reward === item ? 'reward-on' : ''}}"
+            class="reward {{!customReward && reward === item ? 'reward-on' : ''}}"
             bindtap="onReward" data-value="{{item}}">{{item === 0 ? '不设' : '¥' + item}}</view>
+      <view class="reward {{customReward ? 'reward-on' : ''}}" bindtap="onCustomReward">其他</view>
+    </view>
+    <view wx:if="{{customReward}}" class="input custom-reward">
+      <text class="yuan">¥</text>
+      <input class="custom-input" type="number" placeholder="输入金额，1～{{maxReward}} 元" value="{{customRewardText}}"
+             bindinput="onCustomRewardText" maxlength="5" focus="{{customReward}}" />
     </view>
     <view class="quiet hint">拿回物品时由你直接给拾得者，平台不经手。拾得者不能向你要价。</view>
   </view>

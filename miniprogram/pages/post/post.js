@@ -1,4 +1,4 @@
-const { CATEGORIES, NO_REWARD_CATEGORIES } = require('../../utils/constants');
+const { CATEGORIES, NO_REWARD_CATEGORIES, MAX_REWARD } = require('../../utils/constants');
 const { askMessageNotify } = require('../../utils/notify');
 
 Page({
@@ -13,6 +13,9 @@ Page({
     longitude: null,
     rewardOptions: [0, 20, 50, 100],
     reward: 0,
+    customReward: false,
+    customRewardText: '',
+    maxReward: MAX_REWARD,
     rewardAllowed: true,
     verifyQuestion: '',
     submitting: false
@@ -44,10 +47,24 @@ Page({
   onCategory(e) {
     const categoryIndex = Number(e.detail.value);
     const rewardAllowed = !NO_REWARD_CATEGORIES.includes(CATEGORIES[categoryIndex]);
-    this.setData({ categoryIndex, rewardAllowed, reward: rewardAllowed ? this.data.reward : 0 });
+    if (rewardAllowed) this.setData({ categoryIndex, rewardAllowed });
+    else this.setData({ categoryIndex, rewardAllowed, reward: 0, customReward: false, customRewardText: '' });
   },
 
-  onReward(e) { this.setData({ reward: e.currentTarget.dataset.value }); },
+  onReward(e) { this.setData({ reward: e.currentTarget.dataset.value, customReward: false }); },
+  onCustomReward() { this.setData({ customReward: true }); },
+  onCustomRewardText(e) { this.setData({ customRewardText: e.detail.value }); },
+
+  // 最终提交的感谢金（元，整数）。自定义金额填错时返回 null
+  rewardAmount() {
+    const d = this.data;
+    if (!d.isLost || !d.rewardAllowed) return 0;
+    if (!d.customReward) return d.reward;
+    const text = d.customRewardText.trim();
+    if (!/^\d+$/.test(text)) return null;
+    const amount = Number(text);
+    return amount >= 1 && amount <= MAX_REWARD ? amount : null;
+  },
 
   async chooseLocation() {
     try {
@@ -64,6 +81,7 @@ Page({
     if (!d.title.trim()) return '请填写物品名称';
     if (d.latitude == null) return '请选择位置';
     if (!d.isLost && !d.verifyQuestion.trim()) return '请设置一个核验问题，防止被冒领';
+    if (this.rewardAmount() === null) return `感谢金请填 1～${MAX_REWARD} 的整数`;
     return '';
   },
 
@@ -94,7 +112,7 @@ Page({
           placeName: d.placeName,
           latitude: d.latitude,
           longitude: d.longitude,
-          reward: d.isLost ? d.reward : 0,
+          reward: this.rewardAmount(),
           verifyQuestion: d.isLost ? '' : d.verifyQuestion.trim()
         }
       });
