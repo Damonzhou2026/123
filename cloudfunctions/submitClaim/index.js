@@ -1,4 +1,5 @@
 const cloud = require('wx-server-sdk');
+const { pushAndLog } = require('./push');
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 const db = cloud.database();
@@ -36,6 +37,14 @@ exports.main = async (event) => {
       status: 'pending',
       createdAt: db.serverDate()
     }
+  });
+
+  // 提醒拾得者来核对答案，推送失败不影响认领
+  await pushAndLog(cloud, db, _id, found._openid, {
+    text: '有人认领你捡到的东西，点开核对答案',
+    sender: '失主',
+    title: found.title || '',
+    page: `pages/matches/matches?id=${found._id}`
   });
   return { ok: true, id: _id };
 };

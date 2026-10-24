@@ -1,4 +1,5 @@
 const cloud = require('wx-server-sdk');
+const { pushAndLog } = require('./push');
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 const db = cloud.database();
@@ -17,7 +18,7 @@ exports.main = async (event) => {
 
       if (!approve) {
         await claimRef.update({ data: { status: 'rejected', reviewedAt: db.serverDate() } });
-        return { status: 'rejected' };
+        return { status: 'rejected', claim };
       }
 
       const foundRef = tx.collection('posts').doc(claim.foundPostId);
@@ -27,7 +28,7 @@ exports.main = async (event) => {
       await claimRef.update({ data: { status: 'approved', reviewedAt: db.serverDate() } });
       await foundRef.update({ data: { status: 'matched', matchedClaimId: claim._id } });
       await tx.collection('posts').doc(claim.lostPostId).update({ data: { status: 'matched', matchedClaimId: claim._id } });
-      return { status: 'approved', foundPostId: claim.foundPostId };
+      return { status: 'approved', foundPostId: claim.foundPostId, claim, title: found.title };
     });
 
     if (result.status === 'approved') {
@@ -36,6 +37,18 @@ exports.main = async (event) => {
         .where({ foundPostId: result.foundPostId, status: 'pending' })
         .update({ data: { status: 'rejected', reviewedAt: db.serverDate() } });
     }
+
+    // 告诉失主结果，推送失败不影响确认
+    const { claim } = result;
+    const approved = result.status === 'approved';
+    const title = result.title
+      || await db.collection('posts').doc(claim.foundPostId).get().then((r) => r.data.title).catch(() => '');
+    await pushAndLog(cloud, db, claim._id, claim.claimantOpenid, {
+      text: approved ? '拾得者确认是你的东西，点开约交接时间地点' : '拾得者认为答案不对，这次认领没通过',
+      sender: '拾得者',
+      title: title || '',
+      page: approved ? `pages/chat/chat?claimId=${claim._id}` : `pages/matches/matches?id=${claim.lostPostId}`
+    });
     return { ok: true, status: result.status };
   } catch (err) {
     return { ok: false, message: typeof err === 'string' ? err : (err.message || '操作失败') };
