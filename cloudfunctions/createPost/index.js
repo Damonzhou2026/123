@@ -27,8 +27,7 @@ exports.main = async (event) => {
   if (error) return { ok: false, message: error };
 
   const { OPENID } = cloud.getWXContext();
-  const { fileList } = await cloud.getTempFileURL({ fileList: event.photos });
-  const vision = await fetchEmbeddings(fileList.map((f) => f.tempFileURL));
+  const vision = await fetchEmbeddings(cloud, event.photos);
 
   const doc = {
     _openid: OPENID,
@@ -46,6 +45,8 @@ exports.main = async (event) => {
     embeddingSource: vision.source,
     // 智谱看图写的物品描述，只存不返回，方便以后排查匹配效果
     photoDescription: vision.description,
+    // 看图失败的原因（Key 不对、超时等），正常时为空
+    embeddingError: vision.error,
     status: 'open',
     createdAt: db.serverDate()
   };
