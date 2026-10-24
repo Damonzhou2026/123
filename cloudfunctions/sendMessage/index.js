@@ -6,7 +6,7 @@ const db = cloud.database();
 const _ = db.command;
 
 const MAX_LENGTH = 500;
-// 对方 1 分钟内还在聊天页拉过消息，就当他在线，不推送
+// 对方 1 分钟内还在聊天页拉过消息、也没有离开聊天页，就当他在线，不推送
 const ONLINE_MS = 60 * 1000;
 
 // 配对成功的失主和拾得者之间发消息。只有认领被确认后才能聊，聊天不暴露手机号。
@@ -53,7 +53,9 @@ async function notifyRecipient(claim, senderOpenid, text) {
   // 对方正开着聊天页，或者上次提醒之后还没回来看过，就不再推，省着用授权次数
   const seen = claim.seenAt && claim.seenAt[role];
   const notifiedAt = claim.notifiedAt && claim.notifiedAt[role];
-  if (seen && Date.now() - new Date(seen).getTime() < ONLINE_MS) return 'online';
+  const left = claim.leftAt && claim.leftAt[role];
+  const stillOnPage = !left || new Date(left) < new Date(seen);
+  if (seen && stillOnPage && Date.now() - new Date(seen).getTime() < ONLINE_MS) return 'online';
   if (notifiedAt && (!seen || new Date(notifiedAt) > new Date(seen))) return 'already';
 
   const userRef = db.collection('users').doc(touser);
