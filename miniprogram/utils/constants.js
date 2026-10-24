@@ -1,5 +1,8 @@
 // 物品类别：匹配时同类别加分
 const CATEGORIES = ['钥匙', '手机', '耳机', '钱包', '证件', '包', '水杯', '玩具', '衣物', '其他'];
+// 选「其他」时用户自己填具体是什么（10 字以内），存在 customCategory 里
+const OTHER_CATEGORY = '其他';
+const MAX_CUSTOM_CATEGORY = 10;
 
 // 证件类不开启感谢金，引导交给派出所或场馆服务台
 const NO_REWARD_CATEGORIES = ['证件'];
@@ -14,4 +17,4 @@ const MESSAGE_TEMPLATE_ID = 'hBMhed6IMwA5n-jwsSYO1ZUUEL7AB9VUPa71JrQl_xA';
 // 感谢金上限（元），和 cloudfunctions/createPost 里的 MAX_REWARD 保持一致
 const MAX_REWARD = 10000;
 
-module.exports = { CATEGORIES, NO_REWARD_CATEGORIES, MAX_REWARD, ESCROW_ENABLED, MESSAGE_TEMPLATE_ID };
+module.exports = { CATEGORIES, OTHER_CATEGORY, MAX_CUSTOM_CATEGORY, NO_REWARD_CATEGORIES, MAX_REWARD, ESCROW_ENABLED, MESSAGE_TEMPLATE_ID };

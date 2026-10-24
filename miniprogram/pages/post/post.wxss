@@ -48,6 +48,7 @@
   color: var(--accent-ink);
   font-weight: 700;
 }
+.custom-category { margin-top: 16rpx; }
 .custom-reward { display: flex; align-items: center; margin-top: 16rpx; }
 .yuan { margin-right: 12rpx; color: var(--accent-ink); font-weight: 700; }
 .custom-input { flex: 1; height: 96rpx; }
