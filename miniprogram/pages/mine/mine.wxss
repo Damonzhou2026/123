@@ -7,3 +7,6 @@
 .status { font-size: 24rpx; color: var(--quiet); }
 .status-matched { color: var(--ink); font-weight: 700; }
 .status-blocked { color: #D93025; }
+.legal { display: flex; justify-content: center; gap: 16rpx; margin-top: 60rpx; }
+.legal-link { color: var(--quiet); }
+.contact { text-align: center; margin-top: 12rpx; }

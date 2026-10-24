@@ -1,4 +1,7 @@
 {
   "navigationBarTitleText": "掉了么",
-  "enablePullDownRefresh": true
+  "enablePullDownRefresh": true,
+  "usingComponents": {
+    "privacy-popup": "/components/privacy-popup/privacy-popup"
+  }
 }

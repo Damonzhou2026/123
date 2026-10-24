@@ -13,4 +13,11 @@
       <view class="status {{item.status === 'blocked' ? 'status-blocked' : item.status !== 'open' ? 'status-matched' : ''}}">{{item.statusText}}</view>
     </view>
   </view>
+
+  <view class="legal quiet">
+    <navigator url="/pages/legal/legal?doc=terms" class="legal-link">用户协议</navigator>
+    <text>·</text>
+    <navigator url="/pages/legal/legal?doc=privacy" class="legal-link">隐私政策</navigator>
+  </view>
+  <view class="quiet contact">删除发布、注销或投诉，请发邮件到 {{email}}</view>
 </view>

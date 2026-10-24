@@ -18,6 +18,10 @@
   <view class="section-title">附近刚捡到的</view>
 
   <view wx:if="{{loading}}" class="quiet empty">正在加载…</view>
+  <view wx:elif="{{privacyDenied}}" class="quiet empty">
+    同意《用户协议》和《隐私政策》后才能看到附近的物品
+    <view class="link" bindtap="openPrivacy">查看并同意</view>
+  </view>
   <view wx:elif="{{locationDenied}}" class="quiet empty">
     需要位置权限才能看到附近的物品
     <view class="link" bindtap="openSetting">去开启</view>
@@ -35,4 +39,12 @@
       <view class="quiet">{{item.timeText}}</view>
     </view>
   </view>
+
+  <view class="legal quiet">
+    <navigator url="/pages/legal/legal?doc=terms" class="legal-link">用户协议</navigator>
+    <text>·</text>
+    <navigator url="/pages/legal/legal?doc=privacy" class="legal-link">隐私政策</navigator>
+  </view>
+
+  <privacy-popup id="privacy" bind:agree="onPrivacyAgree" />
 </view>

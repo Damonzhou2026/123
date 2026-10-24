@@ -51,4 +51,6 @@
   <view class="btn {{isLost ? 'btn-lost' : 'btn-found'}} submit" bindtap="submit">
     {{submitting ? '发布中…' : (isLost ? '发布并开始 AI 匹配' : '发布，帮它找主人')}}
   </view>
+
+  <privacy-popup />
 </view>

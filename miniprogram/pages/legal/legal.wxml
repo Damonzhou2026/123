@@ -1,0 +1,12 @@
+<view class="page" wx:if="{{doc}}">
+  <view class="title">{{doc.title}}</view>
+  <view class="quiet">生效日期：{{effectiveDate}}</view>
+  <text class="para" user-select>{{doc.intro}}</text>
+
+  <view wx:for="{{doc.sections}}" wx:key="heading" class="section">
+    <view class="heading">{{item.heading}}</view>
+    <text wx:for="{{item.paragraphs}}" wx:for-item="para" wx:key="*this" class="para" user-select>{{para}}</text>
+  </view>
+
+  <view wx:if="{{isPrivacy}}" class="link" bindtap="openWechatGuide">查看微信《用户隐私保护指引》</view>
+</view>
