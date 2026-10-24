@@ -8,6 +8,11 @@
       <navigator class="btn {{isLost ? 'btn-lost' : 'btn-found'}} chat-btn" url="/pages/chat/chat?claimId={{matchedClaimId}}">去聊天</navigator>
     </view>
 
+    <view wx:if="{{postStatus === 'blocked'}}" class="card done">
+      <view class="summary">照片没有通过安全审核</view>
+      <view class="quiet hint">这条发布已下架，别人看不到。请换一张只拍物品本身的照片重新发布。</view>
+    </view>
+
     <!-- 拾得者：别人发来的认领 -->
     <block wx:if="{{!isLost && claims.length > 0}}">
       <view class="summary">{{claims.length}} 个人来认领</view>

@@ -1,5 +1,6 @@
 const cloud = require('wx-server-sdk');
 const { pushAndLog } = require('./push');
+const { SCENE, checkText } = require('./secCheck');
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 const db = cloud.database();
@@ -20,6 +21,7 @@ exports.main = async (event) => {
     return { ok: false, message: '找不到这段对话' };
   }
   if (claim.status !== 'approved' && claim.status !== 'returned') return { ok: false, message: '拾得者确认后才能聊天' };
+  if (await checkText(cloud, OPENID, text, SCENE.comment)) return { ok: false, message: '消息含有违规信息，没有发出' };
 
   const { _id } = await db.collection('messages').add({
     data: {

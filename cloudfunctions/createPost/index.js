@@ -1,5 +1,6 @@
 const cloud = require('wx-server-sdk');
 const { fetchEmbeddings } = require('./embedding');
+const { SCENE, checkText, submitImages } = require('./secCheck');
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 const db = cloud.database();
@@ -33,7 +34,19 @@ exports.main = async (event) => {
   if (error) return { ok: false, message: error };
 
   const { OPENID } = cloud.getWXContext();
-  const vision = await fetchEmbeddings(cloud, event.photos);
+  const customCategory = event.category === OTHER_CATEGORY ? event.customCategory.trim() : '';
+  const placeName = String(event.placeName || '').slice(0, 60);
+  const verifyQuestion = event.type === 'found' ? event.verifyQuestion.trim().slice(0, 60) : '';
+
+  // 名称、自填类别、地点、核验问题都会给别人看到，先过内容安全检测
+  const risky = await checkText(cloud, OPENID, [event.title.trim(), customCategory, placeName, verifyQuestion], SCENE.forum);
+  if (risky) return { ok: false, message: '填写的内容含有违规信息，请修改后再发布' };
+
+  // 照片走微信异步检测，和看图同时进行；结果出来后违规的发布由 mediaCheckCallback 下架
+  const [vision, mediaCheck] = await Promise.all([
+    fetchEmbeddings(cloud, event.photos),
+    submitImages(cloud, OPENID, event.photos, SCENE.forum)
+  ]);
 
   const doc = {
     _openid: OPENID,
@@ -41,13 +54,13 @@ exports.main = async (event) => {
     title: event.title.trim(),
     category: event.category,
     // 类别选「其他」时用户自己填的名称；匹配仍按 category 比较，不受影响
-    customCategory: event.category === OTHER_CATEGORY ? event.customCategory.trim() : '',
+    customCategory,
     photos: event.photos,
-    placeName: String(event.placeName || '').slice(0, 60),
+    placeName,
     location: db.Geo.Point(event.longitude, event.latitude),
     // 感谢金只由失主自愿设置；拾得者不能定价
     reward: event.type === 'lost' ? event.reward : 0,
-    verifyQuestion: event.type === 'found' ? event.verifyQuestion.trim().slice(0, 60) : '',
+    verifyQuestion,
     // 照片特征向量，findMatches 用来看图比对；只有同一来源的向量能互相比
     embeddings: vision.embeddings,
     embeddingSource: vision.source,
@@ -55,6 +68,9 @@ exports.main = async (event) => {
     photoDescription: vision.description,
     // 看图失败的原因（Key 不对、超时等），正常时为空
     embeddingError: vision.error,
+    // 照片安全检测：traceIds 用来对上微信推回来的结果；result 是 pending / pass / risky；
+    // 提交失败时 error 记原因（比如没配接口权限），这时照片不会被检测
+    mediaCheck: { traceIds: mediaCheck.traceIds, result: mediaCheck.traceIds.length ? 'pending' : 'none', error: mediaCheck.error },
     status: 'open',
     createdAt: db.serverDate()
   };

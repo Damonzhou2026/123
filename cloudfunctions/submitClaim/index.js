@@ -1,5 +1,6 @@
 const cloud = require('wx-server-sdk');
 const { pushAndLog } = require('./push');
+const { SCENE, checkText } = require('./secCheck');
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 const db = cloud.database();
@@ -9,6 +10,7 @@ exports.main = async (event) => {
   const { OPENID } = cloud.getWXContext();
   const answer = typeof event.answer === 'string' ? event.answer.trim() : '';
   if (!answer || answer.length > 60) return { ok: false, message: '请填写答案（60 字以内）' };
+  if (await checkText(cloud, OPENID, answer, SCENE.comment)) return { ok: false, message: '答案含有违规信息，请修改后再提交' };
 
   const posts = db.collection('posts');
   const [lost, found] = await Promise.all([

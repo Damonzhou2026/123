@@ -115,10 +115,35 @@ node cloudfunctions/createPost/embedding.test.js
 node cloudfunctions/rateUser/validate.test.js
 node cloudfunctions/reward/reward.test.js
 node cloudfunctions/sendMessage/template.test.js
+node cloudfunctions/createPost/secCheck.test.js
 ```
+
+## 内容安全检测
+
+用户填的文字和上传的照片都要过微信的内容安全接口（微信审核要求）：
+
+| 内容 | 在哪检测 | 违规时 |
+| --- | --- | --- |
+| 发布的物品名称、自填类别、地点、核验问题 | `createPost`，`security.msgSecCheck` | 不让发布，提示修改 |
+| 认领时回答的核验问题 | `submitClaim`，`msgSecCheck` | 不让提交 |
+| 私信 | `sendMessage`，`msgSecCheck` | 消息不发出 |
+| 发布的照片 | `createPost` 提交 `security.mediaCheckAsync`，结果推给 `mediaCheckCallback` | 已发布的这条下架（`status` 改成 `blocked`），“我的发布”里显示“照片未通过审核” |
+
+评价只有星级和固定标签，没有自由文字，不用检测。
+
+照片是异步检测的：先发布，几秒到几分钟后微信把结果推回来，违规的再下架。每条发布的检测情况记在 `posts` 的 `mediaCheck` 字段上（`result` 为 `pending` / `pass` / `risky`；`error` 不为空说明没提交成功，比如接口权限没生效）。检测接口本身出错时文字直接放行，不会让用户卡住。
+
+检测代码在 `secCheck.js`，`createPost`、`submitClaim`、`sendMessage` 各有一份，改的时候三份一起改。接口权限已经写在这三个云函数的 `config.json` 里。
+
+### 配置照片检测结果推送（只做一次）
+
+1. 在 `cloudfunctions/mediaCheckCallback` 上右键，“上传并部署：云端安装依赖”。
+2. 打开云开发控制台，进“设置”→“全局设置”→“消息推送”，点“添加消息推送”。
+3. 消息类型选 `event`，事件类型填 `wxa_media_check`，云函数选 `mediaCheckCallback`，保存。
+
+没配这一步的话，照片照样会提交检测，只是收不到结果，违规照片不会被自动下架。
 
 ## 上线前必须做
 
-- 用户上传的图片和文字要过微信内容安全接口（`security.imgSecCheck` / `msgSecCheck`）
 - 隐私政策和用户协议（涉及位置、照片）
 - 感谢金必须用微信支付“分账”，钱不能进平台自己的账户；拾得者不能定价，只有失主能自愿设置

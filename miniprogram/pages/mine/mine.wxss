@@ -6,3 +6,4 @@
 .item-title { font-weight: 500; margin-left: 12rpx; }
 .status { font-size: 24rpx; color: var(--quiet); }
 .status-matched { color: var(--ink); font-weight: 700; }
+.status-blocked { color: #D93025; }

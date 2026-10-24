@@ -10,7 +10,7 @@
         <text class="item-title">{{item.title}}</text>
       </view>
       <view class="quiet">{{item.placeName}} · {{item.timeText}}</view>
-      <view class="status {{item.status !== 'open' ? 'status-matched' : ''}}">{{item.statusText}}</view>
+      <view class="status {{item.status === 'blocked' ? 'status-blocked' : item.status !== 'open' ? 'status-matched' : ''}}">{{item.statusText}}</view>
     </view>
   </view>
 </view>
