@@ -1,5 +1,5 @@
 const cloud = require('wx-server-sdk');
-const https = require('https');
+const { fetchEmbeddings } = require('./embedding');
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 const db = cloud.database();
@@ -7,36 +7,6 @@ const db = cloud.database();
 const CATEGORIES = ['钥匙', '手机', '耳机', '钱包', '证件', '包', '水杯', '玩具', '衣物', '其他'];
 const NO_REWARD_CATEGORIES = ['证件'];
 const MAX_REWARD = 10000;
-
-// 图像特征服务：在云函数环境变量里配置 EMBEDDING_API_URL 后启用。
-// 约定：POST {"imageUrl": "..."}，返回 {"embedding": [数字, ...]}。
-// 没配置时返回 null，匹配只按类别、距离、时间打分。
-function fetchEmbedding(imageUrl) {
-  const endpoint = process.env.EMBEDDING_API_URL;
-  if (!endpoint) return Promise.resolve(null);
-  return new Promise((resolve) => {
-    const body = JSON.stringify({ imageUrl });
-    const req = https.request(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) },
-      timeout: 8000
-    }, (res) => {
-      let raw = '';
-      res.on('data', (chunk) => { raw += chunk; });
-      res.on('end', () => {
-        try {
-          const parsed = JSON.parse(raw);
-          resolve(Array.isArray(parsed.embedding) ? parsed.embedding : null);
-        } catch (err) {
-          resolve(null);
-        }
-      });
-    });
-    req.on('error', () => resolve(null));
-    req.on('timeout', () => { req.destroy(); resolve(null); });
-    req.end(body);
-  });
-}
 
 function validate(e) {
   if (e.type !== 'lost' && e.type !== 'found') return '类型错误';
@@ -57,8 +27,8 @@ exports.main = async (event) => {
   if (error) return { ok: false, message: error };
 
   const { OPENID } = cloud.getWXContext();
-  const { fileList } = await cloud.getTempFileURL({ fileList: [event.photos[0]] });
-  const embedding = await fetchEmbedding(fileList[0] && fileList[0].tempFileURL);
+  const { fileList } = await cloud.getTempFileURL({ fileList: event.photos });
+  const embeddings = await fetchEmbeddings(fileList.map((f) => f.tempFileURL).filter(Boolean));
 
   const doc = {
     _openid: OPENID,
@@ -71,7 +41,8 @@ exports.main = async (event) => {
     // 感谢金只由失主自愿设置；拾得者不能定价
     reward: event.type === 'lost' ? event.reward : 0,
     verifyQuestion: event.type === 'found' ? event.verifyQuestion.trim().slice(0, 60) : '',
-    embedding,
+    // 每张照片一个特征向量，findMatches 用来看图比对
+    embeddings,
     status: 'open',
     createdAt: db.serverDate()
   };
