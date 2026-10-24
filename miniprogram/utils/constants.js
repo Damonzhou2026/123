@@ -9,6 +9,6 @@ const NO_REWARD_CATEGORIES = ['证件'];
 const ESCROW_ENABLED = false;
 
 // 新消息提醒用的订阅消息模板 ID：微信公众平台 →“订阅消息”→“我的模板”里复制。留空就不弹授权框、不推送
-const MESSAGE_TEMPLATE_ID = '';
+const MESSAGE_TEMPLATE_ID = 'hBMhed6IMwA5n-jwsSYO1ZUUEL7AB9VUPa71JrQl_xA';
 
 module.exports = { CATEGORIES, NO_REWARD_CATEGORIES, ESCROW_ENABLED, MESSAGE_TEMPLATE_ID };
