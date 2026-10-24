@@ -16,9 +16,16 @@ exports.main = async (event) => {
   }
 
   const role = claim.claimantOpenid === OPENID ? 'owner' : 'finder';
+  const claimRef = db.collection('claims').doc(claim._id);
+  // 离开聊天页时记一下，对方再发消息就马上推送，不用等 1 分钟
+  if (event.leaving === true) {
+    await claimRef.update({ data: { [`leftAt.${role}`]: db.serverDate() } }).catch(() => {});
+    return { ok: true };
+  }
   const seen = claim.seenAt && claim.seenAt[role];
-  if (!seen || Date.now() - new Date(seen).getTime() > SEEN_WRITE_MS) {
-    await db.collection('claims').doc(claim._id).update({ data: { [`seenAt.${role}`]: db.serverDate() } }).catch(() => {});
+  const left = claim.leftAt && claim.leftAt[role];
+  if (!seen || Date.now() - new Date(seen).getTime() > SEEN_WRITE_MS || (left && new Date(left) >= new Date(seen))) {
+    await claimRef.update({ data: { [`seenAt.${role}`]: db.serverDate() } }).catch(() => {});
   }
 
   const found = await db.collection('posts').doc(claim.foundPostId).get().then((r) => r.data).catch(() => ({}));

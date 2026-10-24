@@ -54,10 +54,18 @@ Page({
 
   onHide() {
     this.stopPolling();
+    this.markLeft();
   },
 
   onUnload() {
     this.stopPolling();
+    this.markLeft();
+  },
+
+  // 告诉云端我离开聊天页了，对方再发消息就推送给我
+  markLeft() {
+    if (!this.claimId) return;
+    wx.cloud.callFunction({ name: 'listMessages', data: { claimId: this.claimId, leaving: true } }).catch(() => {});
   },
 
   startPolling() {
