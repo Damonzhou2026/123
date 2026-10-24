@@ -81,13 +81,14 @@ Page({
   async reviewClaim(e) {
     const { id, approve } = e.currentTarget.dataset;
     if (approve) {
+      // 配对后失主会发消息过来，先问拾得者要不要收提醒。
+      // 必须在点击后马上弹，放到确认弹窗之后真机上不会出来
+      await askMessageNotify();
       const { confirm } = await wx.showModal({
         title: '确认是失主？',
         content: '确认后会和对方配对，其他人的认领会被自动拒绝。'
       });
       if (!confirm) return;
-      // 配对后失主会发消息过来，问拾得者要不要收提醒
-      await askMessageNotify();
     }
     await this.run('reviewClaim', { claimId: id, approve: !!approve }, approve ? '已配对' : '已拒绝');
   },

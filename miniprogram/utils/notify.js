@@ -1,7 +1,7 @@
 const { MESSAGE_TEMPLATE_ID } = require('./constants');
 
 // 弹出“允许收新消息提醒”的授权框，用户点了允许就记一次。返回 true 表示这次允许了。
-// 微信只允许在点击事件里直接调用：调用之前不能先 await 别的操作（showModal 的确定按钮除外），否则不弹框。
+// 微信只允许在点击事件里直接调用：调用之前不能先 await 别的操作（包括 showModal），否则真机上不弹框。
 function askMessageNotify() {
   if (!MESSAGE_TEMPLATE_ID || !wx.requestSubscribeMessage) return Promise.resolve(false);
   return new Promise((resolve) => {
