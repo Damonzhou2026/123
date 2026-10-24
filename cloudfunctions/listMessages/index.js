@@ -4,6 +4,8 @@ cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 const db = cloud.database();
 
 const PAGE_SIZE = 100;
+// 记录“谁什么时候在看聊天页”，新消息推送靠它判断对方在不在线。聊天页 3 秒拉一次，不用每次都写
+const SEEN_WRITE_MS = 20 * 1000;
 
 // 读取一段对话最近的消息，并告诉调用者自己是失主还是拾得者
 exports.main = async (event) => {
@@ -11,6 +13,12 @@ exports.main = async (event) => {
   const claim = await db.collection('claims').doc(event.claimId).get().then((r) => r.data).catch(() => null);
   if (!claim || (claim.claimantOpenid !== OPENID && claim.finderOpenid !== OPENID)) {
     return { ok: false, message: '找不到这段对话' };
+  }
+
+  const role = claim.claimantOpenid === OPENID ? 'owner' : 'finder';
+  const seen = claim.seenAt && claim.seenAt[role];
+  if (!seen || Date.now() - new Date(seen).getTime() > SEEN_WRITE_MS) {
+    await db.collection('claims').doc(claim._id).update({ data: { [`seenAt.${role}`]: db.serverDate() } }).catch(() => {});
   }
 
   const found = await db.collection('posts').doc(claim.foundPostId).get().then((r) => r.data).catch(() => ({}));
@@ -21,8 +29,9 @@ exports.main = async (event) => {
     .get();
 
   const counterpartOpenid = claim.claimantOpenid === OPENID ? claim.finderOpenid : claim.claimantOpenid;
-  const [counterpart, myRating, lost, payment] = await Promise.all([
+  const [counterpart, me, myRating, lost, payment] = await Promise.all([
     db.collection('users').doc(counterpartOpenid).get().then((r) => r.data).catch(() => null),
+    db.collection('users').doc(OPENID).get().then((r) => r.data).catch(() => null),
     db.collection('ratings').doc(`${claim._id}_${OPENID}`).get().then((r) => r.data).catch(() => null),
     db.collection('posts').doc(claim.lostPostId).get().then((r) => r.data).catch(() => ({})),
     db.collection('payments').doc(claim._id).get().then((r) => r.data).catch(() => null)
@@ -33,7 +42,7 @@ exports.main = async (event) => {
 
   return {
     ok: true,
-    role: claim.claimantOpenid === OPENID ? 'owner' : 'finder',
+    role,
     status: claim.status,
     rated: !!myRating,
     counterpart: counterpart && counterpart.ratingCount
@@ -41,6 +50,8 @@ exports.main = async (event) => {
       : { rating: null, count: 0 },
     // 感谢金：失主设置的金额，和托管状态（none 未付 / created 待支付 / paid 已托管 / settling 分账中 / settled 已到账）
     reward: { amount: lost.reward || 0, status: payment ? payment.status : 'none' },
+    // 我还能收几次新消息提醒，以及是哪个模板的
+    notify: me && me.notify ? { tmplId: me.notify.tmplId, credits: me.notify.credits || 0 } : { tmplId: '', credits: 0 },
     item: { title: found.title || '', photo: urls[photo] || photo, placeName: found.placeName || '' },
     messages: data.reverse().map((m) => ({
       _id: m._id,

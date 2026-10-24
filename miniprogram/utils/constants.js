@@ -8,4 +8,7 @@ const NO_REWARD_CATEGORIES = ['证件'];
 // 接好持牌分账服务商后改成 true，聊天页的托管入口就会回来（cloudfunctions/reward 代码保留）
 const ESCROW_ENABLED = false;
 
-module.exports = { CATEGORIES, NO_REWARD_CATEGORIES, ESCROW_ENABLED };
+// 新消息提醒用的订阅消息模板 ID：微信公众平台 →“订阅消息”→“我的模板”里复制。留空就不弹授权框、不推送
+const MESSAGE_TEMPLATE_ID = '';
+
+module.exports = { CATEGORIES, NO_REWARD_CATEGORIES, ESCROW_ENABLED, MESSAGE_TEMPLATE_ID };
