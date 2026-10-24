@@ -1,0 +1,6 @@
+.page { padding: 32rpx 40rpx 80rpx; }
+.title { font-size: 40rpx; font-weight: 700; margin-bottom: 8rpx; }
+.section { margin-top: 40rpx; }
+.heading { font-size: 32rpx; font-weight: 700; margin-bottom: 12rpx; }
+.para { display: block; font-size: 28rpx; line-height: 1.75; margin-top: 16rpx; }
+.link { color: var(--lost-ink); font-size: 28rpx; margin-top: 48rpx; }

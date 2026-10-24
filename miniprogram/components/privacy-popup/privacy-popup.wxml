@@ -1,0 +1,15 @@
+<view wx:if="{{show}}" class="mask" catchtouchmove="noop">
+  <view class="panel">
+    <view class="title">欢迎使用掉了么</view>
+    <view class="body">
+      为了帮你找回或归还物品，我们需要用到你上传的物品照片、你选择的位置，以及你在小程序里填写的物品信息、核验答案和私信。照片会发给智谱 AI 看图匹配，并经微信内容安全检测。感谢金由失主线下直接给，平台不经手。
+    </view>
+    <view class="body">
+      请阅读
+      <text class="doc-link" catchtap="openDoc" data-doc="terms">《用户协议》</text>和<text class="doc-link" catchtap="openDoc" data-doc="privacy">《隐私政策》</text>，同意后开始使用。
+    </view>
+    <button id="agree-privacy" class="agree" open-type="agreePrivacyAuthorization" bindagreeprivacyauthorization="onAgree">同意并继续</button>
+    <view class="disagree" bindtap="onDisagree">不同意</view>
+    <view class="quiet note">不同意的话，将无法使用定位、上传照片和发布功能。</view>
+  </view>
+</view>

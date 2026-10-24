@@ -147,3 +147,11 @@ node cloudfunctions/createPost/secCheck.test.js
 
 - 隐私政策和用户协议（涉及位置、照片）
 - 感谢金必须用微信支付“分账”，钱不能进平台自己的账户；拾得者不能定价，只有失主能自愿设置
+
+## 隐私政策和用户协议
+
+- 内容在 `miniprogram/utils/legal.js`：运营主体名称、地址、联系邮箱写在最上面的 `OPERATOR` 里，照营业执照填。
+- `pages/legal/legal` 显示政策全文，首页和“我的发布”底部有入口。
+- 首次打开时，`components/privacy-popup` 弹框请用户同意《用户协议》和《隐私政策》。它同时接管微信的隐私授权（`wx.onNeedPrivacyAuthorization`）：用户同意前，定位、选照片等接口会挂起，同意后才继续。首页和发布页各放了一个，以后别的页面要调用定位、相机、相册时也要放一个。
+- 改了政策内容，把 `LEGAL_VERSION` 和 `EFFECTIVE_DATE` 改成新日期，用户下次打开会重新弹框；公众平台的“用户隐私保护指引”也要同步改。
+- 如果换了看图服务（比如改用阿里云百炼），政策第三条里的智谱要改成对应的公司。

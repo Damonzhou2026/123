@@ -1,4 +1,5 @@
 const { timeAgo } = require('../../utils/format');
+const { OPERATOR } = require('../../utils/legal');
 
 const STATUS_TEXT = {
   open: '正在匹配',
@@ -10,7 +11,8 @@ const STATUS_TEXT = {
 Page({
   data: {
     loading: true,
-    items: []
+    items: [],
+    email: OPERATOR.email
   },
 
   onShow() {

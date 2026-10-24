@@ -4,7 +4,8 @@
     "pages/post/post",
     "pages/matches/matches",
     "pages/chat/chat",
-    "pages/mine/mine"
+    "pages/mine/mine",
+    "pages/legal/legal"
   ],
   "window": {
     "navigationBarBackgroundColor": "#FFF8F3",
