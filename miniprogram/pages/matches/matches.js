@@ -1,4 +1,5 @@
 const { timeAgo, distanceText } = require('../../utils/format');
+const { askMessageNotify } = require('../../utils/notify');
 
 const CLAIM_STATUS_TEXT = {
   pending: '已提交，等待拾得者确认',
@@ -71,6 +72,8 @@ Page({
       wx.showToast({ title: '请先回答问题', icon: 'none' });
       return;
     }
+    // 拾得者确认后会发消息约交接，先问失主要不要收提醒
+    await askMessageNotify();
     await this.run('submitClaim', { lostPostId: this.postId, foundPostId, answer }, '已提交，等待拾得者确认');
   },
 
@@ -83,6 +86,8 @@ Page({
         content: '确认后会和对方配对，其他人的认领会被自动拒绝。'
       });
       if (!confirm) return;
+      // 配对后失主会发消息过来，问拾得者要不要收提醒
+      await askMessageNotify();
     }
     await this.run('reviewClaim', { claimId: id, approve: !!approve }, approve ? '已配对' : '已拒绝');
   },

@@ -1,5 +1,6 @@
 // 云数据库集合只允许云函数访问，所以聊天页定时拉取新消息
 const { ESCROW_ENABLED } = require('../../utils/constants');
+const { askMessageNotify, MESSAGE_TEMPLATE_ID } = require('../../utils/notify');
 
 const POLL_MS = 3000;
 const TAGS = ['守时', '热心', '沟通顺畅', '物品完好', '有礼貌'];
@@ -36,6 +37,9 @@ Page({
     draft: '',
     scrollTo: '',
     sending: false,
+    // 新消息提醒：是否可用，还剩几次
+    notifyEnabled: !!MESSAGE_TEMPLATE_ID,
+    notifyCredits: 0,
     quickReplies: ['我现在过去', '我到了，你在哪？', '可以改到服务台交接吗？']
   },
 
@@ -83,6 +87,7 @@ Page({
         reward: result.reward,
         rewardText: rewardText(result.role, result.status, result.reward.status),
         item: result.item,
+        notifyCredits: result.notify && result.notify.tmplId === MESSAGE_TEMPLATE_ID ? result.notify.credits : 0,
         messages: result.messages,
         scrollTo: changed && result.messages.length ? `m-${result.messages.length - 1}` : this.data.scrollTo
       });
@@ -175,9 +180,25 @@ Page({
     this.setData({ draft: e.currentTarget.dataset.text });
   },
 
-  async send() {
+  // 点“开启提醒”
+  async enableNotify() {
+    const ok = await askMessageNotify();
+    if (ok) {
+      wx.showToast({ title: '对方回复时会提醒你', icon: 'none' });
+      await this.load(true);
+    }
+  },
+
+  async send(e) {
     const text = this.data.draft.trim();
     if (!text || this.data.sending) return;
+    // 每允许一次只能收一条提醒，次数快用完时顺便再问一次；这次进聊天页拒绝过就不再问。
+    // 键盘上的“发送”不算点击，微信不让弹框，所以只在点按钮时问
+    if (e && e.type === 'tap' && this.data.notifyEnabled && this.data.notifyCredits < 2 && !this.notifyDeclined) {
+      const accepted = await askMessageNotify();
+      if (accepted) this.setData({ notifyCredits: this.data.notifyCredits + 1 });
+      else this.notifyDeclined = true;
+    }
     this.setData({ sending: true });
     try {
       const { result } = await wx.cloud.callFunction({

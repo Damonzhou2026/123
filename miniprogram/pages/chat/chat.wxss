@@ -16,6 +16,7 @@
 .item-title { font-weight: 700; }
 
 .notice { margin: 20rpx 8rpx; line-height: 1.6; }
+.link { color: var(--mine); font-weight: 600; }
 
 .messages { flex: 1; min-height: 0; }
 .empty { text-align: center; padding: 80rpx 0; }
