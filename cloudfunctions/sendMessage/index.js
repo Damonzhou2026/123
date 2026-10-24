@@ -31,11 +31,16 @@ exports.main = async (event) => {
     }
   });
 
-  // 推送失败不影响消息本身
+  // 推送失败不影响消息本身。结果记在 claims 的 lastPush 上，免费套餐看不到云函数日志时可以在数据库里查
+  let pushError = '';
   const notified = await notifyRecipient(claim, OPENID, text).catch((err) => {
     console.error('新消息推送失败', err);
+    pushError = String(err.errCode || '') + ' ' + (err.errMsg || err.message || String(err));
     return 'error';
   });
+  await db.collection('claims').doc(claim._id)
+    .update({ data: { lastPush: { result: notified, error: pushError.slice(0, 300), at: db.serverDate() } } })
+    .catch(() => {});
   return { ok: true, id: _id, notified };
 };
 
