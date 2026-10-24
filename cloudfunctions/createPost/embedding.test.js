@@ -1,6 +1,6 @@
 // 运行：node cloudfunctions/createPost/embedding.test.js
 const assert = require('assert');
-const { parseDashscope, parseZhipuEmbedding, parseZhipuText, fetchEmbeddings } = require('./embedding');
+const { parseDashscope, parseZhipuEmbedding, parseZhipuText, describeError, fetchEmbeddings } = require('./embedding');
 
 // 百炼接口的返回格式
 assert.deepStrictEqual(
@@ -19,10 +19,22 @@ assert.strictEqual(parseZhipuText({ choices: [{ message: { content: '  黑色皮
 assert.strictEqual(parseZhipuText({ choices: [{ message: { content: '' } }] }), '');
 assert.strictEqual(parseZhipuText({ error: { message: 'x' } }), '');
 
+// 错误整理成一句话
+assert.strictEqual(
+  describeError('智谱看图', { status: 401, body: { error: { code: '1000', message: '身份验证失败' } }, error: '' }),
+  '智谱看图：HTTP 401 1000 身份验证失败'
+);
+assert.strictEqual(describeError('智谱看图', { status: 0, body: null, error: '请求超时' }), '智谱看图：请求超时');
+
 // 没配置 Key 时不请求，返回空
 delete process.env.DASHSCOPE_API_KEY;
 delete process.env.ZHIPU_API_KEY;
-fetchEmbeddings(['https://example.com/a.jpg']).then((result) => {
-  assert.deepStrictEqual(result, { source: '', embeddings: [], description: '' });
+fetchEmbeddings({}, ['cloud://a.jpg']).then((result) => {
+  assert.deepStrictEqual(result, { source: '', embeddings: [], description: '', error: '' });
+  // 照片下载失败时记下原因
+  process.env.ZHIPU_API_KEY = 'test';
+  return fetchEmbeddings({ downloadFile: () => Promise.reject(new Error('x')) }, ['cloud://a.jpg']);
+}).then((result) => {
+  assert.strictEqual(result.error, '下载照片失败');
   console.log('embedding tests passed');
 });

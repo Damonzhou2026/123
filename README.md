@@ -68,8 +68,8 @@
 1. 登录[智谱开放平台](https://bigmodel.cn/)，右上角头像 →“API Key”，复制一个已有的 Key（或新建一个）。这个 Key 不要发给别人，也不要写进代码。
 2. 账户里留一点余额（几块钱足够很久），embedding-3 要扣费；看图用的 GLM-4.6V-Flash 免费。
 3. 打开微信开发者工具，点上方“云开发”进入云开发控制台 →“云函数”→ 点 `createPost` →“配置”（或“版本与配置”）→ 找到“环境变量”，新增一项：名称 `ZHIPU_API_KEY`，值填第 1 步的 Key，保存。
-4. 回到开发者工具，在 `cloudfunctions/createPost` 和 `cloudfunctions/findMatches` 文件夹上分别右键，“上传并部署：云端安装依赖”。（`createPost` 的超时已在 `config.json` 里设为 20 秒。）
-5. 发一条新的失物和一条新的拾物试试。匹配卡片上写“看图匹配 xx%”就说明用上了；写“匹配度 xx%”说明没比对照片（没配好 Key，或者是配置之前发的旧帖子）。想看 AI 把照片看成了什么，可以在云开发控制台的数据库里打开 `posts`，看那条记录的 `photoDescription`。
+4. 回到开发者工具，在 `cloudfunctions/createPost` 和 `cloudfunctions/findMatches` 文件夹上分别右键，“上传并部署：云端安装依赖”。（`createPost` 的超时已在 `config.json` 里设为 60 秒。）
+5. 发一条新的失物和一条新的拾物试试。如果看图失败，数据库里那条记录的 `embeddingError` 会写出原因（免费套餐看不到云函数日志）。匹配卡片上写“看图匹配 xx%”就说明用上了；写“匹配度 xx%”说明没比对照片（没配好 Key，或者是配置之前发的旧帖子）。想看 AI 把照片看成了什么，可以在云开发控制台的数据库里打开 `posts`，看那条记录的 `photoDescription`。
 
 ### 用阿里云百炼
 
