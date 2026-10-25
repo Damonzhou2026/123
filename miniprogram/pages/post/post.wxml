@@ -1,11 +1,18 @@
 <view class="page {{isLost ? 'side-lost' : 'side-found'}}">
-  <view class="photo" bindtap="choosePhoto">
-    <image wx:if="{{photoPath}}" src="{{photoPath}}" mode="aspectFill" class="photo-img" />
-    <view wx:else class="photo-empty">
+  <view wx:if="{{photoPaths.length === 0}}" class="photo" bindtap="choosePhoto">
+    <view class="photo-empty">
       <view class="photo-title">{{isLost ? '上传物品照片' : '拍一张捡到的东西'}}</view>
       <view class="quiet">{{isLost ? '以前拍的照片、同款网图都可以' : '证件号、卡号等信息请遮挡后再拍'}}</view>
     </view>
   </view>
+  <view wx:else class="photo-grid">
+    <view wx:for="{{photoPaths}}" wx:key="*this" class="photo-cell">
+      <image src="{{item}}" mode="aspectFill" class="photo-img" />
+      <view class="photo-remove" data-index="{{index}}" catchtap="removePhoto">×</view>
+    </view>
+    <view wx:if="{{photoPaths.length < maxPhotos}}" class="photo-cell photo-add" bindtap="choosePhoto">+</view>
+  </view>
+  <view class="quiet photo-tip">最多 {{maxPhotos}} 张。多拍几个角度（正面、背面、有字或有特征的地方），AI 认得更准。</view>
 
   <view class="field">
     <view class="label">物品名称</view>

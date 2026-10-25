@@ -1,4 +1,4 @@
-// 拾得者发布后，在附近已有的失物里找匹配，分数够高的推一条订阅消息提醒失主。
+// 拾得者发布后，在附近已有的失物里找匹配，照片比对成功且分数够高的推一条订阅消息提醒失主。
 // 失主要在发布时点过“允许提醒”才收得到；推送失败不影响发布。
 const { scoreMatch, MAX_DISTANCE_M, MAX_GAP_MS } = require('./scoring');
 const { pushTo } = require('./push');
@@ -13,7 +13,8 @@ function pickLostToNotify(found, candidates) {
   return candidates
     .filter((c) => c._openid !== found._openid)
     .map((c) => ({ lost: c, ...scoreMatch(found, c, c.distance) }))
-    .filter((m) => m.score >= NOTIFY_SCORE)
+    // 必须真的比对过照片：没比照片时只按类别、距离、时间打分，同类东西离得近就会很高
+    .filter((m) => m.imageCompared && m.score >= NOTIFY_SCORE)
     .sort((a, b) => b.score - a.score)
     // 同一个失主丢了几样东西也只提醒一次
     .filter((m) => {
