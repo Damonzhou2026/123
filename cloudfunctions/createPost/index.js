@@ -1,6 +1,7 @@
 const cloud = require('wx-server-sdk');
 const { fetchEmbeddings } = require('./embedding');
 const { SCENE, checkText, submitImages } = require('./secCheck');
+const { notifyLostOwners } = require('./notifyMatches');
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 const db = cloud.database();
@@ -76,5 +77,11 @@ exports.main = async (event) => {
   };
 
   const { _id } = await db.collection('posts').add({ data: doc });
+
+  // 捡到东西：去找附近已经登记的失物，像的话提醒失主。失败不影响发布
+  if (doc.type === 'found') {
+    await notifyLostOwners(cloud, db, { ...doc, _id, createdAt: new Date() })
+      .catch((err) => console.error('提醒失主失败', err));
+  }
   return { ok: true, id: _id };
 };

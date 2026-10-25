@@ -1,4 +1,4 @@
-const { CATEGORIES, OTHER_CATEGORY, MAX_CUSTOM_CATEGORY, NO_REWARD_CATEGORIES, MAX_REWARD } = require('../../utils/constants');
+const { CATEGORIES, OTHER_CATEGORY, MAX_CUSTOM_CATEGORY, NO_REWARD_CATEGORIES, MAX_REWARD, MAX_PHOTOS } = require('../../utils/constants');
 const { askMessageNotify } = require('../../utils/notify');
 
 Page({
@@ -9,7 +9,8 @@ Page({
     maxCustomCategory: MAX_CUSTOM_CATEGORY,
     categoryIndex: 0,
     customCategory: '',
-    photoPath: '',
+    photoPaths: [],
+    maxPhotos: MAX_PHOTOS,
     title: '',
     placeName: '',
     latitude: null,
@@ -31,17 +32,26 @@ Page({
   },
 
   async choosePhoto() {
+    const left = MAX_PHOTOS - this.data.photoPaths.length;
+    if (left <= 0) return;
     try {
       const res = await wx.chooseMedia({
-        count: 1,
+        count: left,
         mediaType: ['image'],
         sourceType: this.data.isLost ? ['album', 'camera'] : ['camera', 'album'],
         sizeType: ['compressed']
       });
-      this.setData({ photoPath: res.tempFiles[0].tempFilePath });
+      const added = res.tempFiles.map((f) => f.tempFilePath);
+      this.setData({ photoPaths: this.data.photoPaths.concat(added).slice(0, MAX_PHOTOS) });
     } catch (err) {
       // 用户取消选择，不处理
     }
+  },
+
+  removePhoto(e) {
+    const photoPaths = this.data.photoPaths.slice();
+    photoPaths.splice(e.currentTarget.dataset.index, 1);
+    this.setData({ photoPaths });
   },
 
   onTitle(e) { this.setData({ title: e.detail.value }); },
@@ -85,7 +95,7 @@ Page({
 
   validate() {
     const d = this.data;
-    if (!d.photoPath) return '请先上传照片';
+    if (d.photoPaths.length === 0) return '请先上传照片';
     if (!d.title.trim()) return '请填写物品名称';
     if (this.isOtherCategory() && !d.customCategory.trim()) return '请填写具体是什么东西';
     if (d.latitude == null) return '请选择位置';
@@ -102,15 +112,14 @@ Page({
       return;
     }
     const d = this.data;
-    // 捡到东西的人：有人来认领时要提醒他，先问要不要收提醒
-    if (!d.isLost) await askMessageNotify();
+    // 先问要不要收提醒：拾得者是有人来认领时提醒；失主是有人捡到像他的东西时提醒
+    await askMessageNotify();
     this.setData({ submitting: true });
     try {
-      const ext = d.photoPath.split('.').pop();
-      const upload = await wx.cloud.uploadFile({
-        cloudPath: `posts/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`,
-        filePath: d.photoPath
-      });
+      const uploads = await Promise.all(d.photoPaths.map((path) => wx.cloud.uploadFile({
+        cloudPath: `posts/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${path.split('.').pop()}`,
+        filePath: path
+      })));
       const { result } = await wx.cloud.callFunction({
         name: 'createPost',
         data: {
@@ -118,7 +127,7 @@ Page({
           title: d.title.trim(),
           category: d.categories[d.categoryIndex],
           customCategory: this.isOtherCategory() ? d.customCategory.trim() : '',
-          photos: [upload.fileID],
+          photos: uploads.map((u) => u.fileID),
           placeName: d.placeName,
           latitude: d.latitude,
           longitude: d.longitude,
