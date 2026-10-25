@@ -4,7 +4,7 @@ const { scoreMatch, MAX_DISTANCE_M, MAX_GAP_MS } = require('./scoring');
 const { pushTo } = require('./push');
 
 // 匹配页列出的门槛是 0.35，主动打扰人要更有把握
-const NOTIFY_SCORE = 0.6;
+const NOTIFY_SCORE = 0.8;
 const MAX_NOTIFY = 5;
 
 // candidates 是 geoNear 查出来的失物（带 distance），返回要提醒的，分数从高到低
