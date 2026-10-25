@@ -32,9 +32,10 @@
 会推送这几种提醒：
 - 有人认领时，提醒拾得者去核对答案（`submitClaim`）
 - 拾得者确认或拒绝后，提醒失主结果（`reviewClaim`）
+- 拾得者发布后，在附近 5 公里、14 天内的失物里自动匹配，分数 60% 以上的提醒失主“有人捡到了可能是你的〇〇”，点开进匹配页（`createPost`）。同一个失主每次只提醒一条，每次最多提醒 5 位失主。结果记在拾物的 `matchPushes` 上
 - 聊天里对方发来新消息（`sendMessage`）
 
-小程序不能随便给用户发微信通知，得用户自己点“允许”，**每点一次只能发一条**。所以会在这几个时候弹授权框：发布“捡到”时、失主提交认领时、拾得者确认“是失主”时、在聊天页点“发送”且剩余次数不到 2 次时，以及聊天页上的“开启提醒”。授权框里勾上“总是保持以上选择”后，以后就不再弹框，自动记次数。
+小程序不能随便给用户发微信通知，得用户自己点“允许”，**每点一次只能发一条**。所以会在这几个时候弹授权框：发布时（失物和捡到都弹）、失主提交认领时、拾得者确认“是失主”时、在聊天页点“发送”且剩余次数不到 2 次时，以及聊天页上的“开启提醒”。授权框里勾上“总是保持以上选择”后，以后就不再弹框，自动记次数。
 
 新消息的推送规则：对方正开着聊天页就不推（离开聊天页后马上算离线；没正常离开的，1 分钟没刷新也算离线）；推过一次之后，对方回来看过聊天页才会推下一条，避免一连串消息把次数用光。
 
@@ -45,7 +46,7 @@
 3. 挑一个，点“选用”，勾选关键词：选“发送人”“消息内容”“发送时间”这类（有“物品名称”“备注”也可以勾）。场景说明写：“失主和拾得者在小程序里私信约交接，对方发来新消息时提醒”。提交。
 4. 回到“我的模板”，复制这个模板的“模板 ID”（一长串字母数字），填进 `miniprogram/utils/constants.js` 的 `MESSAGE_TEMPLATE_ID`。
 
-三种提醒共用这一个模板，字段由云函数自动读取模板内容来填，不用改代码。推送代码在 `push.js`，`sendMessage`、`submitClaim`、`reviewClaim` 里各有一份（连同 `template.js`），改的时候三份一起改。每次推送的结果记在 `claims` 的 `lastPush` 上。
+三种提醒共用这一个模板，字段由云函数自动读取模板内容来填，不用改代码。推送代码在 `push.js`，`sendMessage`、`submitClaim`、`reviewClaim`、`createPost` 里各有一份（连同 `template.js`），改的时候四份一起改。`createPost` 里还有一份 `findMatches/scoring.js` 的副本，打分规则改了也要同步。每次推送的结果记在 `claims` 的 `lastPush` 上。
 
 ### 部署
 
@@ -112,6 +113,7 @@
 ```
 node cloudfunctions/findMatches/scoring.test.js
 node cloudfunctions/createPost/embedding.test.js
+node cloudfunctions/createPost/notifyMatches.test.js
 node cloudfunctions/rateUser/validate.test.js
 node cloudfunctions/reward/reward.test.js
 node cloudfunctions/sendMessage/template.test.js

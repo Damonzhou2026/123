@@ -3,7 +3,9 @@
   "permissions": {
     "openapi": [
       "security.msgSecCheck",
-      "security.mediaCheckAsync"
+      "security.mediaCheckAsync",
+      "subscribeMessage.send",
+      "subscribeMessage.getTemplateList"
     ]
   }
 }

@@ -102,8 +102,8 @@ Page({
       return;
     }
     const d = this.data;
-    // 捡到东西的人：有人来认领时要提醒他，先问要不要收提醒
-    if (!d.isLost) await askMessageNotify();
+    // 先问要不要收提醒：拾得者是有人来认领时提醒；失主是有人捡到像他的东西时提醒
+    await askMessageNotify();
     this.setData({ submitting: true });
     try {
       const ext = d.photoPath.split('.').pop();
