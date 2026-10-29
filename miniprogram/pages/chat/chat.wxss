@@ -79,3 +79,7 @@
 .btn-ghost { background: var(--card); color: var(--ink); border: 1rpx solid var(--line); font-weight: 500; }
 .cancelled { margin-top: 20rpx; display: flex; flex-direction: column; gap: 8rpx; }
 .cancelled-title { font-weight: 700; }
+.bubble-wrap { max-width: 80%; display: flex; flex-direction: column; gap: 8rpx; }
+.bubble-wrap .bubble { max-width: 100%; align-self: flex-start; }
+.row-mine .bubble-wrap .bubble { align-self: flex-end; }
+.risk { font-size: 22rpx; line-height: 1.5; color: #9A2F06; background: #FDE5D8; border-radius: 16rpx; padding: 12rpx 16rpx; }

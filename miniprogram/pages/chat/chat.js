@@ -1,9 +1,13 @@
-// 云数据库集合只允许云函数访问，所以聊天页定时拉取新消息
+// 云数据库集合只允许云函数访问，所以聊天页定时拉取新消息。
+// 刚有新消息时 3 秒拉一次，一直没动静就慢慢放到 15 秒；每 5 次里有 1 次拉全量（评分、感谢金状态等）
 const { ESCROW_ENABLED } = require('../../utils/constants');
 const { askMessageNotify, MESSAGE_TEMPLATE_ID } = require('../../utils/notify');
 const { report } = require('../../utils/report');
+const { markRisky } = require('../../utils/safety');
 
-const POLL_MS = 3000;
+const POLL_MIN_MS = 3000;
+const POLL_MAX_MS = 15000;
+const FULL_EVERY = 5;
 const TAGS = ['守时', '热心', '沟通顺畅', '物品完好', '有礼貌'];
 // 和 cloudfunctions/reviewClaim 保持一致
 const CANCEL_REASONS = ['认错了，不是对方的东西', '对方一直不回复', '对方没来交接', '其他'];
@@ -76,12 +80,53 @@ Page({
 
   startPolling() {
     this.stopPolling();
-    this.timer = setInterval(() => this.load(true), POLL_MS);
+    this.pollMs = POLL_MIN_MS;
+    this.polls = 0;
+    this.polling = true;
+    this.schedulePoll();
   },
 
   stopPolling() {
-    if (this.timer) clearInterval(this.timer);
+    this.polling = false;
+    if (this.timer) clearTimeout(this.timer);
     this.timer = null;
+  },
+
+  schedulePoll() {
+    if (!this.polling) return;
+    if (this.timer) clearTimeout(this.timer);
+    this.timer = setTimeout(() => this.poll(), this.pollMs);
+  },
+
+  // 有新消息（或者自己刚发了）就回到 3 秒一次，否则每次放慢一点
+  async poll() {
+    this.polls += 1;
+    const changed = this.polls % FULL_EVERY === 0 ? await this.load(true) : await this.loadNew();
+    this.pollMs = changed ? POLL_MIN_MS : Math.min(Math.round(this.pollMs * 1.5), POLL_MAX_MS);
+    this.schedulePoll();
+  },
+
+  // 只拉最后一条之后的新消息和认领状态。返回有没有变化
+  async loadNew() {
+    const last = this.data.messages[this.data.messages.length - 1];
+    if (!last) return this.load(true);
+    try {
+      const { result } = await wx.cloud.callFunction({
+        name: 'listMessages',
+        data: { claimId: this.claimId, since: last.createdAt }
+      });
+      if (!result.ok) return false;
+      // 状态变了（对方确认、取消、点了已交还）就拉一次全量，把按钮和评分区都刷新
+      if (result.status !== this.data.status || !!result.handedOver !== this.data.handedOver) return this.load(true);
+      const known = new Set(this.data.messages.map((m) => m._id));
+      const fresh = markRisky(result.messages.filter((m) => !known.has(m._id)));
+      if (!fresh.length) return false;
+      const messages = this.data.messages.concat(fresh);
+      this.setData({ messages, scrollTo: `m-${messages.length - 1}` });
+      return true;
+    } catch (err) {
+      return false;
+    }
   },
 
   async load(silent) {
@@ -91,7 +136,10 @@ Page({
         data: { claimId: this.claimId }
       });
       if (!result.ok) throw new Error(result.message);
-      const changed = result.messages.length !== this.data.messages.length;
+      const before = this.data.messages;
+      const changed = result.messages.length !== before.length
+        || (result.messages.length > 0 && result.messages[result.messages.length - 1]._id !== (before[before.length - 1] || {})._id)
+        || result.status !== this.data.status;
       this.setData({
         loading: false,
         role: result.role,
@@ -105,13 +153,15 @@ Page({
         item: result.item,
         handover: result.handover || { type: 'self', place: '' },
         notifyCredits: result.notify && result.notify.tmplId === MESSAGE_TEMPLATE_ID ? result.notify.credits : 0,
-        messages: result.messages,
+        messages: markRisky(result.messages),
         scrollTo: changed && result.messages.length ? `m-${result.messages.length - 1}` : this.data.scrollTo
       });
       this.retrySettle(result);
+      return changed;
     } catch (err) {
       this.setData({ loading: false });
       if (!silent) wx.showToast({ title: err.message || '加载失败', icon: 'none' });
+      return false;
     }
   },
 
@@ -254,7 +304,10 @@ Page({
       });
       if (!result.ok) throw new Error(result.message);
       this.setData({ draft: '' });
-      await this.load(true);
+      await this.loadNew();
+      // 刚发完消息，对方多半马上回，恢复 3 秒一次
+      this.pollMs = POLL_MIN_MS;
+      this.schedulePoll();
     } catch (err) {
       wx.showToast({ title: err.message || '发送失败', icon: 'none' });
     } finally {

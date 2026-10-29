@@ -60,7 +60,10 @@
   <scroll-view class="messages" scroll-y scroll-into-view="{{scrollTo}}">
     <view wx:if="{{!loading && messages.length === 0}}" class="quiet empty">打个招呼，约一下交接的时间和地点吧</view>
     <view wx:for="{{messages}}" wx:key="_id" id="m-{{index}}" class="row {{item.mine ? 'row-mine' : ''}}">
-      <view class="bubble {{item.mine ? 'bubble-mine' : 'bubble-other'}}">{{item.text}}</view>
+      <view class="bubble-wrap">
+        <view class="bubble {{item.mine ? 'bubble-mine' : 'bubble-other'}}">{{item.text}}</view>
+        <view wx:if="{{item.risky}}" class="risk">对方提到了钱。平台不会要求任何人先付钱、交押金或给验证码；东西当面交接，感谢金拿到东西后再给。</view>
+      </view>
     </view>
   </scroll-view>
 

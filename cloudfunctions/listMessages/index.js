@@ -28,6 +28,19 @@ exports.main = async (event) => {
     await claimRef.update({ data: { [`seenAt.${role}`]: db.serverDate() } }).catch(() => {});
   }
 
+  // 聊天页定时拉取时带上 since（最后一条消息的时间），只返回之后的新消息和认领状态，
+  // 不再读对方评分、照片链接这些不会变的东西，省读库次数
+  if (event.since) {
+    const since = new Date(event.since);
+    if (Number.isNaN(since.getTime())) return { ok: false, message: '参数错误' };
+    const { data } = await db.collection('messages')
+      .where({ claimId: claim._id, createdAt: db.command.gt(since) })
+      .orderBy('createdAt', 'asc')
+      .limit(PAGE_SIZE)
+      .get();
+    return { ok: true, light: true, role, ...claimState(claim), messages: data.map((m) => toMessage(m, OPENID)) };
+  }
+
   const found = await db.collection('posts').doc(claim.foundPostId).get().then((r) => r.data).catch(() => ({}));
   const { data } = await db.collection('messages')
     .where({ claimId: claim._id })
@@ -50,10 +63,7 @@ exports.main = async (event) => {
   return {
     ok: true,
     role,
-    status: claim.status,
-    // 拾得者点过“我已交还”；取消配对时谁取消的、为什么
-    handedOver: !!claim.handedOverAt,
-    cancel: claim.status === 'cancelled' ? { by: claim.cancelledBy, reason: claim.cancelReason || '' } : null,
+    ...claimState(claim),
     rated: !!myRating,
     counterpart: counterpart && counterpart.ratingCount
       ? { rating: Math.round((counterpart.ratingSum / counterpart.ratingCount) * 10) / 10, count: counterpart.ratingCount }
@@ -65,14 +75,22 @@ exports.main = async (event) => {
     item: { title: found.title || '', photo: urls[photo] || photo, placeName: found.placeName || '' },
     // 拾得者交到了服务台等处：认领通过后告诉失主去哪取
     handover: found.handover && found.handover.type === 'deposited' ? found.handover : { type: 'self', place: '' },
-    messages: data.reverse().map((m) => ({
-      _id: m._id,
-      text: m.text,
-      createdAt: m.createdAt,
-      mine: m.senderOpenid === OPENID
-    }))
+    messages: data.reverse().map((m) => toMessage(m, OPENID))
   };
 };
+
+// 认领本身的状态：拾得者点过“我已交还”没有；取消配对时谁取消的、为什么
+function claimState(claim) {
+  return {
+    status: claim.status,
+    handedOver: !!claim.handedOverAt,
+    cancel: claim.status === 'cancelled' ? { by: claim.cancelledBy, reason: claim.cancelReason || '' } : null
+  };
+}
+
+function toMessage(m, openid) {
+  return { _id: m._id, text: m.text, createdAt: m.createdAt, mine: m.senderOpenid === openid };
+}
 
 // 照片存的是云存储 fileID。免费套餐不能把存储权限改成“所有用户可读”，
 // 对方直接用 fileID 看不到图，所以由云函数换成临时链接再返回。
