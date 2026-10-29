@@ -12,6 +12,7 @@ const OTHER_CATEGORY = '其他';
 const MAX_CUSTOM_CATEGORY = 10; // 字，和 miniprogram/utils/constants.js 保持一致
 const NO_REWARD_CATEGORIES = ['证件'];
 const MAX_REWARD = 10000; // 元，和 miniprogram/utils/constants.js 保持一致
+const MAX_POSTS_PER_DAY = 10;
 
 function validate(e) {
   if (e.type !== 'lost' && e.type !== 'found') return '类型错误';
@@ -40,6 +41,12 @@ exports.main = async (event) => {
   if (error) return { ok: false, message: error };
 
   const { OPENID } = cloud.getWXContext();
+  // 每人每天最多发 10 条，防止刷屏和批量发假失物
+  const { total: today } = await db.collection('posts')
+    .where({ _openid: OPENID, createdAt: db.command.gte(new Date(Date.now() - 24 * 3600 * 1000)) })
+    .count();
+  if (today >= MAX_POSTS_PER_DAY) return { ok: false, message: '今天发布得太多了，明天再来吧' };
+
   const customCategory = event.category === OTHER_CATEGORY ? event.customCategory.trim() : '';
   const placeName = String(event.placeName || '').slice(0, 60);
   const verifyQuestion = event.type === 'found' ? event.verifyQuestion.trim().slice(0, 60) : '';

@@ -33,7 +33,7 @@ async function rejectPendingClaims(post) {
   const field = post.type === 'lost' ? 'lostPostId' : 'foundPostId';
   await db.collection('claims')
     .where({ [field]: post._id, status: 'pending' })
-    .update({ data: { status: 'rejected', reviewedAt: db.serverDate() } });
+    .update({ data: { status: 'rejected', autoRejected: true, reviewedAt: db.serverDate() } });
 }
 
 async function deletePhotos(fileIDs) {

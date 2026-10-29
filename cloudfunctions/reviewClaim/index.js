@@ -35,7 +35,8 @@ exports.main = async (event) => {
       // 事务外处理：同一件物品的其他待处理认领全部拒绝
       await db.collection('claims')
         .where({ foundPostId: result.foundPostId, status: 'pending' })
-        .update({ data: { status: 'rejected', reviewedAt: db.serverDate() } });
+        // 自动拒绝的不算答错次数，配对取消后这些人还可以再认领
+        .update({ data: { status: 'rejected', autoRejected: true, reviewedAt: db.serverDate() } });
     }
 
     // 告诉失主结果，推送失败不影响确认
