@@ -170,17 +170,19 @@
 
 接口出错时（Key 填错、余额不足）不影响发布，只是这条不比照片，错误会记在 `createPost` 的云函数日志里。
 
-打分逻辑在 `cloudfunctions/findMatches/scoring.js`。测试：
+打分逻辑在 `cloudfunctions/findMatches/scoring.js`。
+
+## 测试和副本检查
+
+云函数之间不能共用文件，所以 `push.js`、`template.js`、`secCheck.js`、`scoring.js` 和几组常量（类别、举报原因、取消原因等）在好几个云函数里各有一份。改完跑一下：
 
 ```
-node cloudfunctions/findMatches/scoring.test.js
-node cloudfunctions/createPost/embedding.test.js
-node cloudfunctions/createPost/notifyMatches.test.js
-node cloudfunctions/rateUser/validate.test.js
-node cloudfunctions/reward/reward.test.js
-node cloudfunctions/sendMessage/template.test.js
-node cloudfunctions/createPost/secCheck.test.js
+node tools/test.js
 ```
+
+它会跑全部测试，并用 `tools/check-copies.js` 检查这些副本是不是一模一样。
+
+每次合并前，用 `node tools/deploy-list.js origin/main` 列出这次改了哪些云函数（合并后要重新“上传并部署”的就是这些）、要不要上传触发器。
 
 ## 内容安全检测
 

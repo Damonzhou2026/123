@@ -1,5 +1,5 @@
 // 匹配打分：图片相似度为主，类别、距离、时间为辅。
-// findMatches 里的原件改了要同步过来。
+// findMatches 和 createPost（拾得者发布后提醒失主）各有一份，改的时候一起改，node tools/check-copies.js 会检查。
 // 没有图片特征向量时（还没接入图像服务），只按类别、距离、时间打分。
 
 const MAX_DISTANCE_M = 5000;
