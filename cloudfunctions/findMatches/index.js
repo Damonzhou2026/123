@@ -20,7 +20,8 @@ exports.main = async (event) => {
   }
 
   const opposite = post.type === 'lost' ? 'found' : 'lost';
-  const createdAt = new Date(post.createdAt).getTime();
+  // 续期过的从续期那天开始算 14 天的匹配窗口
+  const createdAt = new Date(post.renewedAt || post.createdAt).getTime();
 
   const { list } = await db.collection('posts')
     .aggregate()

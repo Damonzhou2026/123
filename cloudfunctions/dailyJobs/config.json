@@ -1,0 +1,16 @@
+{
+  "timeout": 60,
+  "triggers": [
+    {
+      "name": "daily",
+      "type": "timer",
+      "config": "0 0 10 * * * *"
+    }
+  ],
+  "permissions": {
+    "openapi": [
+      "subscribeMessage.send",
+      "subscribeMessage.getTemplateList"
+    ]
+  }
+}

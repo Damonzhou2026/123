@@ -20,11 +20,14 @@ Page({
     matches: [],
     claims: [],
     answers: {},
-    busy: false
+    busy: false,
+    askRenew: false
   },
 
   onLoad(query) {
     this.postId = query.id;
+    // 从“还在找吗？”的提醒点进来
+    this.setData({ askRenew: query.renew === '1' });
     this.load();
   },
 
@@ -72,6 +75,12 @@ Page({
       title: post ? shareTitle(post) : '掉了么：拍张照，帮丢的东西回家',
       path: `/pages/item/item?id=${this.postId}`
     };
+  },
+
+  // 续期：发布 30 天后还在找；过期下架的重新上架
+  async renew() {
+    await this.run('managePost', { action: 'renew', postId: this.postId }, '已续期');
+    this.setData({ askRenew: false });
   },
 
   report(e) {

@@ -7,8 +7,9 @@ const _ = db.command;
 // 用户自己管理发布和账号：
 // close：东西找到了 / 不需要了，撤回这条发布（别人搜不到、认领不了，自己还能看到）
 // delete：彻底删除这条发布和照片
+// renew：发布 30 天后还在找，续期（过期下架的也能重新上架），匹配从续期那天重新算
 // deleteAccount：注销，删除这个人的全部发布、照片、私信、评分，认领记录匿名化
-const ACTIONS = { close, remove, deleteAccount };
+const ACTIONS = { close, remove, renew, deleteAccount };
 
 exports.main = async (event) => {
   const action = ACTIONS[event.action === 'delete' ? 'remove' : event.action];
@@ -54,6 +55,16 @@ async function close(event, openid) {
 
   await db.collection('posts').doc(post._id).update({ data: { status: 'withdrawn', withdrawnAt: db.serverDate() } });
   await rejectPendingClaims(post);
+  return { ok: true };
+}
+
+async function renew(event, openid) {
+  const post = await loadOwnPost(event.postId, openid);
+  if (!post) return { ok: false, message: '找不到这条发布' };
+  if (post.status !== 'open' && post.status !== 'expired') return { ok: false, message: '这条发布不能续期' };
+  await db.collection('posts').doc(post._id).update({
+    data: { status: 'open', renewedAt: db.serverDate(), expireAskedAt: _.remove() }
+  });
   return { ok: true };
 }
 

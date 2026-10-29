@@ -6,6 +6,7 @@ const STATUS_TEXT = {
   matched: '已配对，点开聊天',
   closed: '已归还',
   withdrawn: '已撤回',
+  expired: '过期已下架，点开可以重新上架',
   blocked: '照片未通过审核，已下架'
 };
 
