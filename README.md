@@ -11,7 +11,9 @@
 
 - 私信：配对成功后双方在应用里聊天，约交接时间和地点，不暴露手机号；聊天页每 3 秒拉一次新消息
 - 新消息提醒：对方不在聊天页时，用微信订阅消息提醒他（见下面“新消息提醒”）
-- 我的发布：首页右上角进入，查看自己发过的失物和拾物，已配对的直接进聊天
+- 我的发布：首页右上角进入，查看自己发过的失物和拾物，已配对的直接进聊天；每条可以点“管理”撤回（东西找到了 / 不需要了）或彻底删除，页面底部可以注销账号（`managePost`）
+- 举报：匹配页的每件物品、拾得者看到的每个认领人、聊天页的对方都可以举报，记在 `reports` 集合；同一条发布被 3 个不同的人举报会自动下架（`report`）
+- 首页“附近刚捡到的”里，证件、钱包、手机类不显示照片，只显示类别（照片可能拍到证件号、卡号）
 - 确认取回与评星：失主在聊天页点“我已拿回物品”，双方再互相打 1～5 星、选标签；评分累计到对方的档案上，聊天页会显示对方的平均分
 - 感谢金托管：认领确认后，失主在聊天页付款，钱由微信支付冻结（分账订单）；失主确认拿回后，扣除平台服务费，其余分到拾得者的微信零钱
 
@@ -22,10 +24,37 @@
 1. 安装[微信开发者工具](https://developers.weixin.qq.com/miniprogram/dev/devtools/download.html)，用“导入项目”打开这个文件夹。
 2. 在[微信公众平台](https://mp.weixin.qq.com/)注册小程序，把 AppID 填进 `project.config.json` 的 `appid`。
 3. 在开发者工具里点“云开发”，创建一个环境，把环境 ID 填进 `miniprogram/app.js` 的 `CLOUD_ENV`。
-4. 在云开发控制台的数据库里新建集合 `posts`、`claims`、`messages`、`ratings`、`users` 和 `payments`，并给 `posts` 的 `location` 字段加一个**地理位置索引**（附近查询要用到）。这几个集合的权限都设成“所有用户不可读写”，只让云函数访问。
+4. 在云开发控制台的数据库里新建集合 `posts`、`claims`、`messages`、`ratings`、`users`、`payments` 和 `reports`，并给 `posts` 的 `location` 字段加一个**地理位置索引**（附近查询要用到）。这几个集合的权限都设成“所有用户不可读写”，只让云函数访问。
    云存储保持默认的“仅创建者可读写”就行：别人的照片由云函数换成临时链接再返回（免费套餐也改不了存储权限）。
+   再按下面“数据库索引”加几个普通索引。
 5. 在 `cloudfunctions` 下面的每个文件夹上分别右键，选“上传并部署：云端安装依赖”。
 6. 点“编译”，就能在模拟器或手机上预览。
+
+## 数据库索引
+
+数据少的时候没有索引也能跑，到一所学校每周几十上百条时，没有索引的查询会变慢、读库次数也更多。在云开发控制台 →“数据库”→ 点集合 →“索引管理”→“添加索引”，每行加一个（“唯一”都不勾）：
+
+| 集合 | 索引字段 | 用在哪 |
+| --- | --- | --- |
+| `posts` | `location`（地理位置） | 附近查询、匹配（第一次部署时已加） |
+| `posts` | `_openid` 升序、`createdAt` 降序 | 我的发布 |
+| `posts` | `mediaCheck.traceIds` 升序 | 照片检测结果回来时找到对应发布 |
+| `claims` | `foundPostId` 升序、`status` 升序 | 拾得者看认领、自动拒绝其他认领 |
+| `claims` | `lostPostId` 升序 | 失主看自己的认领 |
+| `claims` | `claimantOpenid` 升序 | 注销 |
+| `claims` | `finderOpenid` 升序 | 注销 |
+| `messages` | `claimId` 升序、`createdAt` 降序 | 聊天页拉消息 |
+| `messages` | `senderOpenid` 升序 | 注销 |
+| `ratings` | `raterOpenid` 升序 | 注销 |
+| `ratings` | `rateeOpenid` 升序 | 注销 |
+| `reports` | `targetId` 升序 | 统计举报人数 |
+| `reports` | `reporterOpenid` 升序、`createdAt` 降序 | 每人每天举报次数 |
+
+## 举报处理
+
+举报记在 `reports` 集合：`targetType` 是 `post`（某条发布）或 `claim`（某次认领，即聊天里的对方），`reason` 是原因，`detail` 是补充说明，`reportedOpenid` 是被举报的人。处理完把 `status` 改成 `done`。
+
+同一条发布被 3 个人举报会自动下架（`posts` 的 `status` 变成 `blocked`，`blockReason` 是 `reports`）。核实是误报的，把 `status` 改回 `open`、删掉 `blockReason` 就恢复了。
 
 ## 新消息提醒（微信订阅消息）
 
@@ -147,7 +176,6 @@ node cloudfunctions/createPost/secCheck.test.js
 
 ## 上线前必须做
 
-- 隐私政策和用户协议（涉及位置、照片）
 - 感谢金必须用微信支付“分账”，钱不能进平台自己的账户；拾得者不能定价，只有失主能自愿设置
 
 ## 隐私政策和用户协议

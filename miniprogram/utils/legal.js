@@ -8,8 +8,8 @@ const OPERATOR = {
 };
 
 // 改了政策或协议内容，就把版本号改成新的日期：用户下次打开会重新弹出同意框
-const LEGAL_VERSION = '2026-10-24';
-const EFFECTIVE_DATE = '2026 年 10 月 24 日';
+const LEGAL_VERSION = '2026-10-29';
+const EFFECTIVE_DATE = '2026 年 10 月 29 日';
 
 const contact = `邮箱：${OPERATOR.email}\n地址：${OPERATOR.address}`;
 
