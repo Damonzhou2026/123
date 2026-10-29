@@ -51,6 +51,9 @@ exports.main = async (event) => {
     ok: true,
     role,
     status: claim.status,
+    // 拾得者点过“我已交还”；取消配对时谁取消的、为什么
+    handedOver: !!claim.handedOverAt,
+    cancel: claim.status === 'cancelled' ? { by: claim.cancelledBy, reason: claim.cancelReason || '' } : null,
     rated: !!myRating,
     counterpart: counterpart && counterpart.ratingCount
       ? { rating: Math.round((counterpart.ratingSum / counterpart.ratingCount) * 10) / 10, count: counterpart.ratingCount }

@@ -5,6 +5,8 @@ const { report } = require('../../utils/report');
 
 const POLL_MS = 3000;
 const TAGS = ['守时', '热心', '沟通顺畅', '物品完好', '有礼貌'];
+// 和 cloudfunctions/reviewClaim 保持一致
+const CANCEL_REASONS = ['认错了，不是对方的东西', '对方一直不回复', '对方没来交接', '其他'];
 
 // 感谢金状态的说明文字，按“我是谁”区分
 function rewardText(role, claimStatus, rewardStatus) {
@@ -26,6 +28,8 @@ Page({
     loading: true,
     role: 'owner',
     status: '',
+    handedOver: false,
+    cancel: null,
     rated: false,
     counterpart: { rating: null, count: 0 },
     reward: { amount: 0, status: 'none' },
@@ -92,6 +96,8 @@ Page({
         loading: false,
         role: result.role,
         status: result.status,
+        handedOver: !!result.handedOver,
+        cancel: result.cancel || null,
         rated: result.rated,
         counterpart: result.counterpart,
         reward: result.reward,
@@ -152,6 +158,32 @@ Page({
     });
     if (!confirm) return;
     await this.call('confirmReturn', { claimId: this.claimId }, '已确认');
+  },
+
+  // 拾得者：“我已交还”，提醒失主确认
+  async handedOver() {
+    const { confirm } = await wx.showModal({
+      title: '已经把东西交给失主了？',
+      content: '我们会提醒失主确认。失主 3 天内没有确认，会自动算作已归还。'
+    });
+    if (!confirm) return;
+    await this.call('reviewClaim', { action: 'handedOver', claimId: this.claimId }, '已提醒失主');
+  },
+
+  // 任一方：取消配对，物品回到匹配中
+  async cancelMatch() {
+    const { tapIndex } = await wx.showActionSheet({ itemList: CANCEL_REASONS }).catch(() => ({ tapIndex: -1 }));
+    const reason = CANCEL_REASONS[tapIndex];
+    if (!reason) return;
+    const { confirm } = await wx.showModal({
+      title: '取消这次配对？',
+      content: '取消后这件东西会回到匹配中，别人可以重新认领，你们的聊天也会结束。',
+      confirmText: '取消配对',
+      cancelText: '再想想',
+      confirmColor: '#D93025'
+    });
+    if (!confirm) return;
+    await this.call('reviewClaim', { action: 'cancel', claimId: this.claimId, reason }, '已取消配对');
   },
 
   pickStar(e) {

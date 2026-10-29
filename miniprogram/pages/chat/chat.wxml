@@ -21,7 +21,17 @@
   </view>
 
   <view wx:if="{{status === 'approved' && role === 'owner'}}" class="btn btn-lost confirm" bindtap="confirmReturn">我已拿回物品</view>
-  <view wx:if="{{status === 'approved' && role === 'finder'}}" class="notice quiet">交接后请失主在这里点“我已拿回物品”。</view>
+  <block wx:if="{{status === 'approved' && role === 'finder'}}">
+    <view wx:if="{{!handedOver}}" class="btn btn-ghost confirm" bindtap="handedOver">我已交还</view>
+    <view wx:else class="notice quiet">你已经告诉失主东西交还了。失主 3 天内没有确认，会自动算作已归还。</view>
+  </block>
+  <view wx:if="{{status === 'approved' && role === 'owner' && handedOver}}" class="notice quiet">拾得者说已经把东西交给你了，拿到了请点上面的“我已拿回物品”。</view>
+  <view wx:if="{{status === 'approved'}}" class="notice quiet">认错了人或对方一直不来？<text class="link" bindtap="cancelMatch">取消配对</text></view>
+
+  <view wx:if="{{status === 'cancelled'}}" class="card cancelled">
+    <view class="cancelled-title">这次配对已取消</view>
+    <view class="quiet">{{cancel.by === role ? '你' : '对方'}}取消了配对（{{cancel.reason}}）。东西已回到匹配中，可以去“我的发布”里看看别的匹配。</view>
+  </view>
 
   <view wx:if="{{status === 'returned' && !rated}}" class="card rate">
     <view class="rate-title">{{role === 'owner' ? '东西回家了！给对方打个分吧' : '归还完成，给对方打个分吧'}}</view>
@@ -54,6 +64,7 @@
     </view>
   </scroll-view>
 
+  <block wx:if="{{status !== 'cancelled'}}">
   <view class="quick">
     <view wx:for="{{quickReplies}}" wx:key="*this" class="quick-item" bindtap="useQuick" data-text="{{item}}">{{item}}</view>
   </view>
@@ -63,4 +74,5 @@
            confirm-type="send" bindconfirm="send" maxlength="500" />
     <view class="send" bindtap="send">发送</view>
   </view>
+  </block>
 </view>
