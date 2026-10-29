@@ -1,5 +1,5 @@
 // 给某个用户推一条订阅消息，用掉他一次授权次数。
-// sendMessage、submitClaim、reviewClaim、createPost 各放一份（云函数不能共用文件），改的时候四份一起改。
+// sendMessage、submitClaim、reviewClaim、createPost、dailyJobs 各放一份（云函数不能共用文件），改的时候五份一起改。
 const { parseTemplate, buildData } = require('./template');
 
 // info: { text, sender（失主/拾得者）, title（物品名）, page（点开后打开的页面） }

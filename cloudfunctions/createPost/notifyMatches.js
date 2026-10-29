@@ -27,7 +27,6 @@ function pickLostToNotify(found, candidates) {
 
 // found：刚存进数据库的拾物（带 _id）。结果记在拾物的 matchPushes 上，方便在数据库里排查。
 async function notifyLostOwners(cloud, db, found) {
-  const _ = db.command;
   const now = found.createdAt.getTime();
   const { list } = await db.collection('posts')
     .aggregate()
@@ -36,13 +35,15 @@ async function notifyLostOwners(cloud, db, found) {
       spherical: true,
       near: found.location,
       maxDistance: MAX_DISTANCE_M,
-      query: { type: 'lost', status: 'open', createdAt: _.gte(new Date(now - MAX_GAP_MS)) }
+      query: { type: 'lost', status: 'open' }
     })
-    .limit(50)
+    .limit(100)
     .end();
+  // 14 天内发布或续期过的失物才提醒
+  const recent = list.filter((c) => new Date(c.renewedAt || c.createdAt).getTime() >= now - MAX_GAP_MS);
 
   // 点“我捡到了”指定的那位失主已经单独提醒过了
-  const picks = pickLostToNotify(found, list.filter((c) => c._id !== found.forLostPostId));
+  const picks = pickLostToNotify(found, recent.filter((c) => c._id !== found.forLostPostId));
   const pushes = [];
   for (const { lost, score } of picks) {
     let error = '';

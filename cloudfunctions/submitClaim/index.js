@@ -5,6 +5,9 @@ const { SCENE, checkText } = require('./secCheck');
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 const db = cloud.database();
 
+const MAX_TRIES = 2;
+const MAX_PER_DAY = 5;
+
 // 失主回答拾得者的核验问题，发起认领；由拾得者确认答案是否正确
 exports.main = async (event) => {
   const { OPENID } = cloud.getWXContext();
@@ -23,6 +26,16 @@ exports.main = async (event) => {
   if (found._openid === OPENID) return { ok: false, message: '不能认领自己捡到的物品' };
 
   const claims = db.collection('claims');
+  const _ = db.command;
+  // 防止把核验答案一个个试出来：同一件东西被拾得者拒绝过 2 次就不能再答（别人配对成功时被自动拒的不算）；
+  // 也防止有人到处乱认领：每人每天最多认领 5 次
+  const [{ total: rejectedTimes }, { total: today }] = await Promise.all([
+    claims.where({ foundPostId: found._id, claimantOpenid: OPENID, status: 'rejected', autoRejected: _.neq(true) }).count(),
+    claims.where({ claimantOpenid: OPENID, createdAt: _.gte(new Date(Date.now() - 24 * 3600 * 1000)) }).count()
+  ]);
+  if (rejectedTimes >= MAX_TRIES) return { ok: false, message: `这件东西你已经答过 ${MAX_TRIES} 次了，不能再答。如果确实是你的，请发邮件联系我们` };
+  if (today >= MAX_PER_DAY) return { ok: false, message: '今天认领的次数太多了，明天再试吧' };
+
   const { data: existing } = await claims
     .where({ foundPostId: found._id, claimantOpenid: OPENID, status: db.command.in(['pending', 'approved']) })
     .limit(1)

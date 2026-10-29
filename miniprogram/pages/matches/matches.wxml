@@ -17,6 +17,17 @@
       <view class="quiet hint">这条发布已下架，别人看不到。请换一张只拍物品本身的照片重新发布。</view>
     </view>
 
+    <view wx:if="{{postStatus === 'expired'}}" class="card done">
+      <view class="summary">这条发布已经过期下架</view>
+      <view class="quiet hint">发布 30 天后没有续期，就自动下架了。还在找的话可以重新上架。</view>
+      <view class="btn {{isLost ? 'btn-lost' : 'btn-found'}} chat-btn" bindtap="renew">重新上架</view>
+    </view>
+    <view wx:if="{{postStatus === 'open' && askRenew}}" class="card done">
+      <view class="summary">{{isLost ? '还在找吗？' : '还没找到失主'}}</view>
+      <view class="quiet hint">这条已经发布 30 天了，不续期的话 7 天后会自动下架。</view>
+      <view class="btn {{isLost ? 'btn-lost' : 'btn-found'}} chat-btn" bindtap="renew">{{isLost ? '还在找，续期 30 天' : '续期 30 天'}}</view>
+    </view>
+
     <view wx:if="{{postStatus === 'withdrawn'}}" class="card done">
       <view class="summary">这条发布已撤回</view>
       <view class="quiet hint">别人已经搜不到、也认领不了它了。想彻底删除，可以在“我的发布”里点“管理”。</view>
@@ -37,6 +48,7 @@
           <view class="btn btn-found" bindtap="reviewClaim" data-id="{{item._id}}" data-approve="{{true}}">是失主，确认</view>
         </view>
         <view wx:elif="{{item.status === 'approved'}}" class="tag tag-found">已确认</view>
+        <view wx:elif="{{item.status === 'cancelled'}}" class="quiet">配对已取消</view>
         <view wx:else class="quiet">已拒绝</view>
         <text class="quiet report-link" catchtap="report" data-type="claim" data-id="{{item._id}}">举报这个认领人</text>
       </view>

@@ -33,7 +33,7 @@
     </block>
 
     <view wx:elif="{{item.status !== 'open'}}" class="card done">
-      {{item.status === 'withdrawn' ? '发布者已经撤回了这条' : '这件东西已经找到主人了'}}
+      {{item.status === 'withdrawn' ? '发布者已经撤回了这条' : (item.status === 'expired' ? '这条发布已经过期下架了' : '这件东西已经找到主人了')}}
     </view>
 
     <!-- 别人捡到的：失主来认领 -->

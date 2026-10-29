@@ -17,6 +17,9 @@
 - 我的发布：首页右上角进入，查看自己发过的失物和拾物，已配对的直接进聊天；每条可以点“管理”撤回（东西找到了 / 不需要了）或彻底删除，页面底部可以注销账号（`managePost`）
 - 举报：匹配页的每件物品、拾得者看到的每个认领人、聊天页的对方都可以举报，记在 `reports` 集合；同一条发布被 3 个不同的人举报会自动下架（`report`）
 - 首页“附近刚捡到的”里，证件、钱包、手机类不显示照片，只显示类别（照片可能拍到证件号、卡号）
+- 取消配对：配对后任一方可以在聊天页“取消配对”（认错人、对方失联、没来交接），两条发布回到匹配中，之前被自动拒绝的人可以重新认领（`reviewClaim` 的 `action: 'cancel'`）
+- 我已交还：拾得者在聊天页点“我已交还”，提醒失主确认；失主 3 天没确认，定时任务自动算作已归还（`action: 'handedOver'`）
+- 防冒领：同一件东西被拾得者拒绝 2 次就不能再答；每人每天最多认领 5 次、发布 10 条
 - 确认取回与评星：失主在聊天页点“我已拿回物品”，双方再互相打 1～5 星、选标签；评分累计到对方的档案上，聊天页会显示对方的平均分
 - 感谢金托管：认领确认后，失主在聊天页付款，钱由微信支付冻结（分账订单）；失主确认拿回后，扣除平台服务费，其余分到拾得者的微信零钱
 
@@ -27,11 +30,32 @@
 1. 安装[微信开发者工具](https://developers.weixin.qq.com/miniprogram/dev/devtools/download.html)，用“导入项目”打开这个文件夹。
 2. 在[微信公众平台](https://mp.weixin.qq.com/)注册小程序，把 AppID 填进 `project.config.json` 的 `appid`。
 3. 在开发者工具里点“云开发”，创建一个环境，把环境 ID 填进 `miniprogram/app.js` 的 `CLOUD_ENV`。
-4. 在云开发控制台的数据库里新建集合 `posts`、`claims`、`messages`、`ratings`、`users`、`payments` 和 `reports`，并给 `posts` 的 `location` 字段加一个**地理位置索引**（附近查询要用到）。这几个集合的权限都设成“所有用户不可读写”，只让云函数访问。
+4. 在云开发控制台的数据库里新建集合 `posts`、`claims`、`messages`、`ratings`、`users`、`payments`、`reports` 和 `calibration`，并给 `posts` 的 `location` 字段加一个**地理位置索引**（附近查询要用到）。这几个集合的权限都设成“所有用户不可读写”，只让云函数访问。
    云存储保持默认的“仅创建者可读写”就行：别人的照片由云函数换成临时链接再返回（免费套餐也改不了存储权限）。
    再按下面“数据库索引”加几个普通索引。
 5. 在 `cloudfunctions` 下面的每个文件夹上分别右键，选“上传并部署：云端安装依赖”。
 6. 点“编译”，就能在模拟器或手机上预览。
+
+## 每天的定时任务（`dailyJobs`）
+
+每天上午 10 点自动跑（定时触发器写在 `cloudfunctions/dailyJobs/config.json`）：
+
+- 配对 3 天还没点“我已拿回物品”：提醒失主一次
+- 拾得者点了“我已交还”，失主 3 天没确认：自动算作已归还（`claims.autoConfirmed`）
+- 发布 30 天还在匹配中：提醒发布者“还在找吗”，点开匹配页可以续期（`managePost` 的 `renew`）
+- 提醒后 7 天没续期：自动下架（`status: 'expired'`），之后在匹配页还能“重新上架”
+
+部署：在 `cloudfunctions/dailyJobs` 上右键“上传并部署：云端安装依赖”，再右键“上传触发器”。想马上跑一次看看，在云开发控制台 →“云函数”→ `dailyJobs` →“云端测试”，直接点运行，返回每项处理了几条。只有定时触发器和控制台能运行它，小程序里调用会被拒绝。
+
+## 校准匹配分数（`calibrate`）
+
+`findMatches/scoring.js` 里的 `COS_RANGE` 决定“两张照片多像算像”，现在的数是估的。用真实照片校准一次：
+
+1. 准备 8～10 样常见的东西（钥匙、耳机、水杯、钱包、雨伞……），最好有两三样同类不同款（比如两个不同的黑色钱包）。
+2. 微信号 A 给每样东西发一条失物，名称写“校准1 黑钥匙”“校准2 白耳机”……照片用一个角度拍。
+3. 微信号 B 给同样的东西发拾物，名称用同一个编号（“校准1 钥匙”），换个角度、换个背景拍。每人每天最多发 10 条，一天发不完第二天接着发。
+4. 云开发控制台 →“云函数”→ `calibrate` →“云端测试”，点运行。结果也存在数据库 `calibration` 集合的 `latest` 里。
+5. 把结果里的 `same`、`differentSameCategory` 和 `suggested` 发给 Claude，据此调 `COS_RANGE`。测完在“我的发布”里把这些校准发布删掉。
 
 ## 数据库索引
 
@@ -52,6 +76,11 @@
 | `ratings` | `raterOpenid` 升序 | 注销 |
 | `ratings` | `rateeOpenid` 升序 | 注销 |
 | `reports` | `targetId` 升序 | 统计举报人数 |
+| `claims` | `status` 升序、`reviewedAt` 升序 | 定时任务：提醒确认拿回 |
+| `claims` | `status` 升序、`handedOverAt` 升序 | 定时任务：自动确认 |
+| `claims` | `claimantOpenid` 升序、`createdAt` 降序 | 每人每天认领次数 |
+| `posts` | `status` 升序、`createdAt` 升序 | 定时任务：30 天提醒续期 |
+| `posts` | `status` 升序、`expireAskedAt` 升序 | 定时任务：过期下架 |
 | `reports` | `reporterOpenid` 升序、`createdAt` 降序 | 每人每天举报次数 |
 
 ## 举报处理
@@ -79,7 +108,7 @@
 3. 挑一个，点“选用”，勾选关键词：选“发送人”“消息内容”“发送时间”这类（有“物品名称”“备注”也可以勾）。场景说明写：“失主和拾得者在小程序里私信约交接，对方发来新消息时提醒”。提交。
 4. 回到“我的模板”，复制这个模板的“模板 ID”（一长串字母数字），填进 `miniprogram/utils/constants.js` 的 `MESSAGE_TEMPLATE_ID`。
 
-三种提醒共用这一个模板，字段由云函数自动读取模板内容来填，不用改代码。推送代码在 `push.js`，`sendMessage`、`submitClaim`、`reviewClaim`、`createPost` 里各有一份（连同 `template.js`），改的时候四份一起改。`createPost` 里还有一份 `findMatches/scoring.js` 的副本，打分规则改了也要同步。每次推送的结果记在 `claims` 的 `lastPush` 上。
+三种提醒共用这一个模板，字段由云函数自动读取模板内容来填，不用改代码。推送代码在 `push.js`，`sendMessage`、`submitClaim`、`reviewClaim`、`createPost`、`dailyJobs` 里各有一份（连同 `template.js`），改的时候五份一起改。`createPost` 里还有一份 `findMatches/scoring.js` 的副本，打分规则改了也要同步。每次推送的结果记在 `claims` 的 `lastPush` 上。
 
 ### 部署
 
