@@ -1,5 +1,6 @@
 const { timeAgo, distanceText } = require('../../utils/format');
 const { askMessageNotify } = require('../../utils/notify');
+const { report } = require('../../utils/report');
 
 const CLAIM_STATUS_TEXT = {
   pending: '已提交，等待拾得者确认',
@@ -13,6 +14,7 @@ Page({
     isLost: true,
     postStatus: 'open',
     matchedClaimId: '',
+    blockReason: '',
     myPhoto: '',
     matches: [],
     claims: [],
@@ -50,6 +52,7 @@ Page({
         isLost: result.post.type === 'lost',
         postStatus: result.post.status,
         matchedClaimId: result.post.matchedClaimId,
+        blockReason: result.post.blockReason || '',
         myPhoto: result.post.photos[0],
         matches,
         claims
@@ -58,6 +61,11 @@ Page({
       this.setData({ loading: false });
       wx.showToast({ title: err.message || '加载失败，下拉重试', icon: 'none' });
     }
+  },
+
+  report(e) {
+    const { type, id } = e.currentTarget.dataset;
+    report(type, id);
   },
 
   onAnswer(e) {

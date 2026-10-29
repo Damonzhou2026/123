@@ -8,7 +8,11 @@
       <navigator class="btn {{isLost ? 'btn-lost' : 'btn-found'}} chat-btn" url="/pages/chat/chat?claimId={{matchedClaimId}}">去聊天</navigator>
     </view>
 
-    <view wx:if="{{postStatus === 'blocked'}}" class="card done">
+    <view wx:if="{{postStatus === 'blocked' && blockReason === 'reports'}}" class="card done">
+      <view class="summary">这条发布被多人举报，已暂时下架</view>
+      <view class="quiet hint">我们核实后会处理。如果有误会，请发邮件联系我们（邮箱在“我的发布”页面底部）。</view>
+    </view>
+    <view wx:elif="{{postStatus === 'blocked'}}" class="card done">
       <view class="summary">照片没有通过安全审核</view>
       <view class="quiet hint">这条发布已下架，别人看不到。请换一张只拍物品本身的照片重新发布。</view>
     </view>
@@ -34,6 +38,7 @@
         </view>
         <view wx:elif="{{item.status === 'approved'}}" class="tag tag-found">已确认</view>
         <view wx:else class="quiet">已拒绝</view>
+        <text class="quiet report-link" catchtap="report" data-type="claim" data-id="{{item._id}}">举报这个认领人</text>
       </view>
     </block>
 
@@ -56,7 +61,10 @@
           <image class="photo photo-found" src="{{isLost ? item.photos[0] : myPhoto}}" mode="aspectFill" />
         </view>
         <view class="match-title">{{item.title}}</view>
-        <view class="quiet">{{item.placeName}}</view>
+        <view class="match-foot">
+          <text class="quiet">{{item.placeName}}</text>
+          <text class="quiet report-link" catchtap="report" data-type="post" data-id="{{item._id}}">举报</text>
+        </view>
 
         <view wx:if="{{isLost && item.claimText}}" class="claim-status">{{item.claimText}}</view>
         <view wx:elif="{{isLost && item.verifyQuestion}}" class="verify">

@@ -34,7 +34,9 @@ Page({
       const items = result.items.map((it) => ({
         ...it,
         timeText: timeAgo(it.createdAt),
-        statusText: STATUS_TEXT[it.status] || ''
+        statusText: it.status === 'blocked' && it.blockReason === 'reports'
+          ? '被多人举报，已暂时下架。有误会请发邮件给我们'
+          : STATUS_TEXT[it.status] || ''
       }));
       this.setData({ loading: false, items });
     } catch (err) {
