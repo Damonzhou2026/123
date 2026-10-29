@@ -1,6 +1,11 @@
 const { PRIVATE_PHOTO_CATEGORIES, CATEGORIES, OTHER_CATEGORY, MAX_CUSTOM_CATEGORY, NO_REWARD_CATEGORIES, MAX_REWARD, MAX_PHOTOS } = require('../../utils/constants');
 const { askMessageNotify } = require('../../utils/notify');
 
+// 拾得者把东西放在哪。选“其他”要自己填地点，前三个可以补充一句（比如几号楼）
+const SELF_SPOT = '在我这里';
+const OTHER_SPOT = '其他';
+const SPOTS = [SELF_SPOT, '服务台', '宿管', '保安室', OTHER_SPOT];
+
 Page({
   data: {
     isLost: true,
@@ -24,6 +29,10 @@ Page({
     maxReward: MAX_REWARD,
     rewardAllowed: true,
     verifyQuestion: '',
+    // 拾得者：东西在自己手上，还是已经交到服务台、宿管、保安室或其他地方
+    spots: SPOTS,
+    spot: SPOTS[0],
+    depositPlace: '',
     submitting: false
   },
 
@@ -31,6 +40,28 @@ Page({
     const isLost = query.type !== 'found';
     this.setData({ isLost });
     wx.setNavigationBarTitle({ title: isLost ? '发布：我丢了' : '发布：我捡到' });
+    // 从物品详情页过来：claimFor 是要认领的拾物，forLost 是捡到的人说“我捡到了”的那条失物
+    this.claimFor = query.claimFor || '';
+    this.forLost = query.forLost || '';
+    this.prefill(query);
+  },
+
+  // 带过来的类别和地点先填上，用户可以改
+  prefill(query) {
+    const data = {};
+    const index = CATEGORIES.indexOf(decodeURIComponent(query.category || ''));
+    if (index >= 0) {
+      data.categoryIndex = index;
+      data.privatePhoto = PRIVATE_PHOTO_CATEGORIES.includes(CATEGORIES[index]);
+      data.rewardAllowed = !NO_REWARD_CATEGORIES.includes(CATEGORIES[index]);
+      if (CATEGORIES[index] === OTHER_CATEGORY) data.customCategory = decodeURIComponent(query.customCategory || '');
+    }
+    const latitude = Number(query.latitude);
+    const longitude = Number(query.longitude);
+    if (query.latitude && query.longitude && Number.isFinite(latitude) && Number.isFinite(longitude)) {
+      Object.assign(data, { latitude, longitude, placeName: decodeURIComponent(query.placeName || '') });
+    }
+    if (Object.keys(data).length) this.setData(data);
   },
 
   async choosePhoto() {
@@ -58,6 +89,8 @@ Page({
 
   onTitle(e) { this.setData({ title: e.detail.value }); },
   onVerify(e) { this.setData({ verifyQuestion: e.detail.value }); },
+  onSpot(e) { this.setData({ spot: e.currentTarget.dataset.value }); },
+  onDepositPlace(e) { this.setData({ depositPlace: e.detail.value }); },
   onCustomCategory(e) { this.setData({ customCategory: e.detail.value }); },
 
   onCategory(e) {
@@ -83,6 +116,15 @@ Page({
     return amount >= 1 && amount <= MAX_REWARD ? amount : null;
   },
 
+  // 交到哪了：给失主看的一句话，比如“宿管（3 号楼）”
+  handover() {
+    const { spot } = this.data;
+    const detail = this.data.depositPlace.trim();
+    if (spot === SELF_SPOT) return { type: 'self', place: '' };
+    if (spot === OTHER_SPOT) return { type: 'deposited', place: detail };
+    return { type: 'deposited', place: detail ? `${spot}（${detail}）` : spot };
+  },
+
   isOtherCategory() {
     return CATEGORIES[this.data.categoryIndex] === OTHER_CATEGORY;
   },
@@ -103,6 +145,7 @@ Page({
     if (this.isOtherCategory() && !d.customCategory.trim()) return '请填写具体是什么东西';
     if (d.latitude == null) return '请选择位置';
     if (!d.isLost && !d.verifyQuestion.trim()) return '请设置一个核验问题，防止被冒领';
+    if (!d.isLost && d.spot === OTHER_SPOT && !d.depositPlace.trim()) return '请填写交到了哪里';
     if (this.rewardAmount() === null) return `感谢金请填 1～${MAX_REWARD} 的整数`;
     return '';
   },
@@ -135,11 +178,18 @@ Page({
           latitude: d.latitude,
           longitude: d.longitude,
           reward: this.rewardAmount(),
-          verifyQuestion: d.isLost ? '' : d.verifyQuestion.trim()
+          verifyQuestion: d.isLost ? '' : d.verifyQuestion.trim(),
+          handover: d.isLost ? null : this.handover(),
+          forLostPostId: this.forLost
         }
       });
       if (!result.ok) throw new Error(result.message);
-      wx.redirectTo({ url: `/pages/matches/matches?id=${result.id}` });
+      // 为了认领才登记的失物：回到那件拾物的详情页，直接回答问题
+      wx.redirectTo({
+        url: this.claimFor
+          ? `/pages/item/item?id=${this.claimFor}&lostId=${result.id}`
+          : `/pages/matches/matches?id=${result.id}`
+      });
     } catch (err) {
       wx.showToast({ title: err.message || '发布失败，请重试', icon: 'none' });
       this.setData({ submitting: false });

@@ -38,20 +38,31 @@ exports.main = async (event) => {
     .limit(50)
     .end();
 
-  const matches = list
-    .filter((c) => c._openid !== OPENID)
+  // 捡到的人在这条失物的详情页点了“我捡到了”发的拾物：不管距离和分数，排在最前面
+  const linked = post.type === 'lost'
+    ? (await db.collection('posts').where({ type: 'found', status: 'open', forLostPostId: post._id }).limit(10).get()).data
+    : [];
+  const linkedIds = new Set(linked.map((c) => c._id));
+
+  const scored = list
+    .filter((c) => c._openid !== OPENID && !linkedIds.has(c._id))
     .map((c) => ({ c, ...scoreMatch(post, c, c.distance) }))
     .filter((m) => m.score >= MIN_SCORE)
-    .sort((a, b) => b.score - a.score)
+    .sort((a, b) => b.score - a.score);
+  const matches = linked
+    .filter((c) => c._openid !== OPENID)
+    .map((c) => ({ c, ...scoreMatch(post, c, distanceBetween(post.location, c.location)), linked: true }))
+    .concat(scored)
     .slice(0, MAX_RESULTS)
-    .map(({ c, score, imageCompared }) => ({
+    .map(({ c, score, imageCompared, linked: isLinked }) => ({
       _id: c._id,
       title: c.title,
       category: c.category,
       photos: c.photos,
       placeName: c.placeName,
       createdAt: c.createdAt,
-      distance: c.distance,
+      distance: c.distance != null ? c.distance : distanceBetween(post.location, c.location),
+      linked: !!isLinked,
       verifyQuestion: c.verifyQuestion || '',
       claimStatus: claimStatusFor(claims, c._id),
       score,
@@ -65,8 +76,28 @@ exports.main = async (event) => {
   return { ok: true, post: publicPost(post), matches, claims };
 };
 
+// 数据库读出来的地理位置可能是 Geo.Point 对象，也可能是 GeoJSON（coordinates: [经度, 纬度]）
+function latLng(point) {
+  if (!point) return null;
+  if (typeof point.latitude === 'number') return { latitude: point.latitude, longitude: point.longitude };
+  if (Array.isArray(point.coordinates)) return { latitude: point.coordinates[1], longitude: point.coordinates[0] };
+  return null;
+}
+
+// 两点之间的大致距离（米），geoNear 之外查出来的拾物用
+function distanceBetween(p, q) {
+  const a = latLng(p);
+  const b = latLng(q);
+  if (!a || !b) return null;
+  const rad = Math.PI / 180;
+  const dLat = (b.latitude - a.latitude) * rad;
+  const dLng = (b.longitude - a.longitude) * rad;
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(a.latitude * rad) * Math.cos(b.latitude * rad) * Math.sin(dLng / 2) ** 2;
+  return 2 * 6371000 * Math.asin(Math.sqrt(h));
+}
+
 function publicPost(post) {
-  return { _id: post._id, type: post.type, status: post.status, photos: post.photos, matchedClaimId: post.matchedClaimId || '', blockReason: post.blockReason || '' };
+  return { _id: post._id, type: post.type, status: post.status, title: post.title, placeName: post.placeName || '', photos: post.photos, matchedClaimId: post.matchedClaimId || '', blockReason: post.blockReason || '' };
 }
 
 function claimStatusFor(claims, foundPostId) {

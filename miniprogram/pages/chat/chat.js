@@ -34,6 +34,7 @@ Page({
     stars: 5,
     tagOptions: TAGS.map((name) => ({ name, on: false })),
     item: {},
+    handover: { type: 'self', place: '' },
     messages: [],
     draft: '',
     scrollTo: '',
@@ -96,6 +97,7 @@ Page({
         reward: result.reward,
         rewardText: rewardText(result.role, result.status, result.reward.status),
         item: result.item,
+        handover: result.handover || { type: 'self', place: '' },
         notifyCredits: result.notify && result.notify.tmplId === MESSAGE_TEMPLATE_ID ? result.notify.credits : 0,
         messages: result.messages,
         scrollTo: changed && result.messages.length ? `m-${result.messages.length - 1}` : this.data.scrollTo

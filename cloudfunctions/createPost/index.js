@@ -2,6 +2,7 @@ const cloud = require('wx-server-sdk');
 const { fetchEmbeddings } = require('./embedding');
 const { SCENE, checkText, submitImages } = require('./secCheck');
 const { notifyLostOwners } = require('./notifyMatches');
+const { pushTo } = require('./push');
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 const db = cloud.database();
@@ -23,6 +24,10 @@ function validate(e) {
   if (!Array.isArray(e.photos) || e.photos.length === 0 || e.photos.length > 3) return '请上传 1～3 张照片';
   if (typeof e.latitude !== 'number' || typeof e.longitude !== 'number') return '请选择位置';
   if (e.type === 'found' && (typeof e.verifyQuestion !== 'string' || !e.verifyQuestion.trim())) return '请设置核验问题';
+  if (e.type === 'found' && e.handover && e.handover.type === 'deposited') {
+    if (typeof e.handover.place !== 'string' || !e.handover.place.trim() || e.handover.place.length > 40) return '请填写交到了哪里（30 字以内）';
+  }
+  if (e.forLostPostId != null && typeof e.forLostPostId !== 'string') return '参数错误';
   if (e.type === 'lost') {
     if (!Number.isInteger(e.reward) || e.reward < 0 || e.reward > MAX_REWARD) return `感谢金请填 0～${MAX_REWARD} 的整数`;
     if (e.reward > 0 && NO_REWARD_CATEGORIES.includes(e.category)) return '证件类物品不设感谢金';
@@ -38,9 +43,14 @@ exports.main = async (event) => {
   const customCategory = event.category === OTHER_CATEGORY ? event.customCategory.trim() : '';
   const placeName = String(event.placeName || '').slice(0, 60);
   const verifyQuestion = event.type === 'found' ? event.verifyQuestion.trim().slice(0, 60) : '';
+  // 拾得者把东西交到了服务台等处：地点只告诉通过核验的失主
+  const deposited = event.type === 'found' && event.handover && event.handover.type === 'deposited';
+  const handover = { type: deposited ? 'deposited' : 'self', place: deposited ? event.handover.place.trim() : '' };
+  // 从某条失物的详情页点“我捡到了”发的，发布后直接提醒那位失主
+  const forLostPostId = event.type === 'found' ? event.forLostPostId || '' : '';
 
   // 名称、自填类别、地点、核验问题都会给别人看到，先过内容安全检测
-  const risky = await checkText(cloud, OPENID, [event.title.trim(), customCategory, placeName, verifyQuestion], SCENE.forum);
+  const risky = await checkText(cloud, OPENID, [event.title.trim(), customCategory, placeName, verifyQuestion, handover.place], SCENE.forum);
   if (risky) return { ok: false, message: '填写的内容含有违规信息，请修改后再发布' };
 
   // 照片走微信异步检测，和看图同时进行；结果出来后违规的发布由 mediaCheckCallback 下架
@@ -62,6 +72,8 @@ exports.main = async (event) => {
     // 感谢金只由失主自愿设置；拾得者不能定价
     reward: event.type === 'lost' ? event.reward : 0,
     verifyQuestion,
+    handover,
+    forLostPostId,
     // 照片特征向量，findMatches 用来看图比对；只有同一来源的向量能互相比
     embeddings: vision.embeddings,
     embeddingSource: vision.source,
@@ -80,8 +92,25 @@ exports.main = async (event) => {
 
   // 捡到东西：去找附近已经登记的失物，像的话提醒失主。失败不影响发布
   if (doc.type === 'found') {
+    if (forLostPostId) {
+      await notifyLinkedOwner(OPENID, { ...doc, _id }).catch((err) => console.error('提醒失主失败', err));
+    }
     await notifyLostOwners(cloud, db, { ...doc, _id, createdAt: new Date() })
       .catch((err) => console.error('提醒失主失败', err));
   }
   return { ok: true, id: _id };
 };
+
+// 捡到的人在某条失物详情页点了“我捡到了”：不管 AI 打几分，都提醒这位失主来看看。
+// 结果记在拾物的 linkedPush 上
+async function notifyLinkedOwner(finderOpenid, found) {
+  const lost = await db.collection('posts').doc(found.forLostPostId).get().then((r) => r.data).catch(() => null);
+  if (!lost || lost.type !== 'lost' || lost.status !== 'open' || lost._openid === finderOpenid) return;
+  const result = await pushTo(cloud, db, lost._openid, {
+    text: `有人说捡到了你的${lost.title}，点开核对一下`,
+    sender: '拾得者',
+    title: lost.title || '',
+    page: `pages/matches/matches?id=${lost._id}`
+  }).catch((err) => `error ${err.errCode || ''} ${err.errMsg || err.message || ''}`.slice(0, 200));
+  await db.collection('posts').doc(found._id).update({ data: { linkedPush: { lostPostId: lost._id, result } } }).catch(() => {});
+}

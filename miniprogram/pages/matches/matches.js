@@ -1,6 +1,7 @@
 const { timeAgo, distanceText } = require('../../utils/format');
 const { askMessageNotify } = require('../../utils/notify');
 const { report } = require('../../utils/report');
+const { shareTitle } = require('../../utils/share');
 
 const CLAIM_STATUS_TEXT = {
   pending: '已提交，等待拾得者确认',
@@ -54,6 +55,7 @@ Page({
         matchedClaimId: result.post.matchedClaimId,
         blockReason: result.post.blockReason || '',
         myPhoto: result.post.photos[0],
+        post: result.post,
         matches,
         claims
       });
@@ -61,6 +63,15 @@ Page({
       this.setData({ loading: false });
       wx.showToast({ title: err.message || '加载失败，下拉重试', icon: 'none' });
     }
+  },
+
+  // 转发出去的是这条发布的详情页，别人点开就能认领或者说“我捡到了”
+  onShareAppMessage() {
+    const post = this.data.post;
+    return {
+      title: post ? shareTitle(post) : '掉了么：拍张照，帮丢的东西回家',
+      path: `/pages/item/item?id=${this.postId}`
+    };
   },
 
   report(e) {

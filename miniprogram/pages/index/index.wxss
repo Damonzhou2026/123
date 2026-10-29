@@ -24,7 +24,12 @@
 .action-title { font-size: 36rpx; font-weight: 700; }
 .action-sub { font-size: 24rpx; opacity: 0.9; margin-top: 4rpx; }
 
-.section-title { font-size: 34rpx; font-weight: 700; margin-bottom: 20rpx; }
+.tabs { display: flex; gap: 32rpx; margin-bottom: 20rpx; }
+.tab { font-size: 32rpx; color: var(--quiet); padding-bottom: 8rpx; border-bottom: 6rpx solid transparent; }
+.tab-on { font-weight: 700; color: var(--ink); }
+.tab-found { border-color: var(--found); }
+.tab-lost { border-color: var(--lost); }
+.tab-hint { margin-bottom: 20rpx; }
 .empty { text-align: center; padding: 60rpx 0; }
 .link { color: var(--lost); margin-top: 16rpx; }
 
@@ -36,3 +41,4 @@
 .legal { display: flex; justify-content: center; gap: 16rpx; margin-top: 60rpx; }
 .legal-link { color: var(--quiet); }
 .thumb-hidden { display: flex; align-items: center; justify-content: center; font-size: 26rpx; font-weight: 700; color: var(--found-ink); background: var(--found-tint); }
+.thumb-lost { color: var(--lost-ink); background: var(--lost-tint); }

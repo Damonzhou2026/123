@@ -52,6 +52,17 @@
   <view wx:if="{{isLost && !rewardAllowed}}" class="quiet hint">证件类物品不设感谢金，建议同时联系派出所或场馆服务台。</view>
 
   <view wx:if="{{!isLost}}" class="field">
+    <view class="label">东西现在在哪</view>
+    <view class="spots">
+      <view wx:for="{{spots}}" wx:key="*this" class="reward spot {{spot === item ? 'reward-on' : ''}}"
+            bindtap="onSpot" data-value="{{item}}">{{index === 0 ? item : (index === spots.length - 1 ? item : '交到' + item)}}</view>
+    </view>
+    <input wx:if="{{spot !== spots[0]}}" class="input custom-category" value="{{depositPlace}}" bindinput="onDepositPlace" maxlength="30"
+           placeholder="{{spot === spots[spots.length - 1] ? '交到哪了？比如：图书馆一楼借还处' : '补充一下（选填），比如：3 号楼、东门'}}" />
+    <view wx:if="{{spot !== spots[0]}}" class="quiet hint">具体地点只告诉通过核验的失主，失主自己去取，不用和你约时间。</view>
+  </view>
+
+  <view wx:if="{{!isLost}}" class="field">
     <view class="label">核验问题（只有失主知道答案）</view>
     <input class="input" placeholder="比如：钥匙扣上挂的是什么？" value="{{verifyQuestion}}" bindinput="onVerify" maxlength="60" />
   </view>

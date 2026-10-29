@@ -41,7 +41,8 @@ async function notifyLostOwners(cloud, db, found) {
     .limit(50)
     .end();
 
-  const picks = pickLostToNotify(found, list);
+  // 点“我捡到了”指定的那位失主已经单独提醒过了
+  const picks = pickLostToNotify(found, list.filter((c) => c._id !== found.forLostPostId));
   const pushes = [];
   for (const { lost, score } of picks) {
     let error = '';

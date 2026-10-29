@@ -15,7 +15,10 @@
     </view>
   </view>
 
-  <view class="section-title">附近刚捡到的</view>
+  <view class="tabs">
+    <view class="tab {{tab === 'found' ? 'tab-on tab-found' : ''}}" bindtap="switchTab" data-tab="found">附近刚捡到的</view>
+    <view class="tab {{tab === 'lost' ? 'tab-on tab-lost' : ''}}" bindtap="switchTab" data-tab="lost">附近有人在找</view>
+  </view>
 
   <view wx:if="{{loading}}" class="quiet empty">正在加载…</view>
   <view wx:elif="{{privacyDenied}}" class="quiet empty">
@@ -26,14 +29,15 @@
     需要位置权限才能看到附近的物品
     <view class="link" bindtap="openSetting">去开启</view>
   </view>
-  <view wx:elif="{{items.length === 0}}" class="quiet empty">附近 3 公里内暂时没有人捡到东西</view>
+  <view wx:elif="{{items.length === 0}}" class="quiet empty">{{tab === 'found' ? '附近 3 公里内暂时没有人捡到东西' : '附近 3 公里内暂时没有人在找东西'}}</view>
+  <view wx:elif="{{tab === 'lost'}}" class="quiet tab-hint">路过时帮忙留意一下，捡到了点开说一声。</view>
 
-  <view wx:for="{{items}}" wx:key="_id" class="card item">
-    <view wx:if="{{item.photoHidden}}" class="thumb thumb-hidden">{{item.category}}</view>
+  <view wx:for="{{items}}" wx:key="_id" class="card item" bindtap="open" data-id="{{item._id}}">
+    <view wx:if="{{item.photoHidden || !item.photos[0]}}" class="thumb thumb-hidden {{tab === 'lost' ? 'thumb-lost' : ''}}">{{item.category}}</view>
     <image wx:else class="thumb" src="{{item.photos[0]}}" mode="aspectFill" />
     <view class="item-body">
       <view>
-        <text class="tag tag-found">捡到</text>
+        <text class="tag {{tab === 'found' ? 'tag-found' : 'tag-lost'}}">{{tab === 'found' ? '捡到' : '丢了'}}</text>
         <text class="item-title">{{item.title}}</text>
       </view>
       <view class="quiet">{{item.placeName}}</view>

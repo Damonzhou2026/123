@@ -15,6 +15,11 @@
           class="btn btn-lost" bindtap="payReward">支付 ¥{{reward.amount}} 托管</view>
   </view>
 
+  <view wx:if="{{handover.type === 'deposited' && status === 'approved'}}" class="card handover">
+    <view class="handover-place">东西在：{{handover.place}}</view>
+    <view class="quiet">{{role === 'owner' ? '直接去那里领取，带上能证明是你的东西（比如同款照片、钥匙）。领到后点下面的“我已拿回物品”。' : '你已经把东西交到这里，失主会自己去领。'}}</view>
+  </view>
+
   <view wx:if="{{status === 'approved' && role === 'owner'}}" class="btn btn-lost confirm" bindtap="confirmReturn">我已拿回物品</view>
   <view wx:if="{{status === 'approved' && role === 'finder'}}" class="notice quiet">交接后请失主在这里点“我已拿回物品”。</view>
 

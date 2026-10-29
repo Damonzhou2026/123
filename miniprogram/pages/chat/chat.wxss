@@ -74,3 +74,5 @@
 .reward-lost { background: var(--lost-tint); border-color: var(--lost-tint); }
 .reward-found { background: var(--found-tint); border-color: var(--found-tint); }
 .reward-amount { font-size: 34rpx; font-weight: 700; }
+.handover { margin-top: 20rpx; display: flex; flex-direction: column; gap: 8rpx; }
+.handover-place { font-weight: 700; }

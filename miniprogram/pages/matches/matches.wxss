@@ -32,3 +32,5 @@
 .btn-ghost { background: var(--card); color: var(--ink); border: 1rpx solid var(--line); }
 .match-foot { display: flex; justify-content: space-between; align-items: center; gap: 16rpx; }
 .report-link { flex: none; text-decoration: underline; align-self: flex-end; }
+button.share-btn { margin: 24rpx 0 8rpx; padding: 0; border: none; font-size: 30rpx; }
+button.share-btn::after { border: none; }
