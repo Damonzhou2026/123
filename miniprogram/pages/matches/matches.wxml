@@ -13,6 +13,11 @@
       <view class="quiet hint">这条发布已下架，别人看不到。请换一张只拍物品本身的照片重新发布。</view>
     </view>
 
+    <view wx:if="{{postStatus === 'withdrawn'}}" class="card done">
+      <view class="summary">这条发布已撤回</view>
+      <view class="quiet hint">别人已经搜不到、也认领不了它了。想彻底删除，可以在“我的发布”里点“管理”。</view>
+    </view>
+
     <!-- 拾得者：别人发来的认领 -->
     <block wx:if="{{!isLost && claims.length > 0}}">
       <view class="summary">{{claims.length}} 个人来认领</view>
