@@ -60,6 +60,8 @@ exports.main = async (event) => {
     // 我还能收几次新消息提醒，以及是哪个模板的
     notify: me && me.notify ? { tmplId: me.notify.tmplId, credits: me.notify.credits || 0 } : { tmplId: '', credits: 0 },
     item: { title: found.title || '', photo: urls[photo] || photo, placeName: found.placeName || '' },
+    // 拾得者交到了服务台等处：认领通过后告诉失主去哪取
+    handover: found.handover && found.handover.type === 'deposited' ? found.handover : { type: 'self', place: '' },
     messages: data.reverse().map((m) => ({
       _id: m._id,
       text: m.text,

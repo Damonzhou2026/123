@@ -85,3 +85,5 @@
 .custom-input { flex: 1; height: 96rpx; }
 .hint { margin-top: 12rpx; line-height: 1.6; }
 .submit { margin-top: 48rpx; }
+.spots { display: flex; flex-wrap: wrap; gap: 16rpx; }
+.spot { flex: none; width: calc((100% - 32rpx) / 3); }

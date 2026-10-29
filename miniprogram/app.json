@@ -3,6 +3,7 @@
     "pages/index/index",
     "pages/post/post",
     "pages/matches/matches",
+    "pages/item/item",
     "pages/chat/chat",
     "pages/mine/mine",
     "pages/legal/legal"

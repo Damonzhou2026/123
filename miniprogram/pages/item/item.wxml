@@ -1,0 +1,65 @@
+<view class="page {{item.type === 'found' ? 'side-found' : 'side-lost'}}">
+  <view wx:if="{{loading}}" class="quiet empty">正在加载…</view>
+  <view wx:elif="{{!item}}" class="quiet empty">这条发布不存在或已下架</view>
+
+  <block wx:else>
+    <swiper wx:if="{{item.photos.length > 0}}" class="photos" indicator-dots="{{item.photos.length > 1}}">
+      <swiper-item wx:for="{{item.photos}}" wx:key="*this">
+        <image class="photo" src="{{item}}" mode="aspectFill" />
+      </swiper-item>
+    </swiper>
+    <view wx:else class="photos photo-hidden">
+      <view class="photo-hidden-title">{{item.customCategory || item.category}}</view>
+      <view class="quiet">{{item.photoHidden ? '这类东西的照片不公开，认领时拾得者会核对' : '没有照片'}}</view>
+    </view>
+
+    <view class="card info">
+      <view>
+        <text class="tag {{item.type === 'found' ? 'tag-found' : 'tag-lost'}}">{{item.type === 'found' ? '捡到' : '丢了'}}</text>
+        <text class="title">{{item.title}}</text>
+      </view>
+      <view class="quiet">{{item.customCategory || item.category}} · {{item.placeName}} · {{timeText}}</view>
+      <view wx:if="{{item.type === 'lost' && item.reward > 0}}" class="reward">失主愿意给感谢金 ¥{{item.reward}}</view>
+      <view wx:if="{{item.type === 'found' && item.handover.type === 'deposited'}}" class="quiet">
+        已交到{{item.isMine ? '：' + item.handover.place : '服务台、宿管或保安室，核验通过后告诉你具体地点'}}
+      </view>
+    </view>
+
+    <!-- 自己的发布 -->
+    <block wx:if="{{item.isMine}}">
+      <view class="quiet hint">这是你的发布。转发到班级群、宿舍群，让更多人帮忙留意。</view>
+      <button class="btn btn-share" open-type="share">转发到微信群</button>
+      <view class="btn btn-ghost" bindtap="goMatches">看看匹配和认领</view>
+    </block>
+
+    <view wx:elif="{{item.status !== 'open'}}" class="card done">
+      {{item.status === 'withdrawn' ? '发布者已经撤回了这条' : '这件东西已经找到主人了'}}
+    </view>
+
+    <!-- 别人捡到的：失主来认领 -->
+    <block wx:elif="{{item.type === 'found'}}">
+      <view wx:if="{{claimText && myClaim.status !== 'rejected'}}" class="card done">
+        {{claimText}}
+        <view wx:if="{{myClaim.status === 'approved'}}" class="btn btn-lost chat-btn" bindtap="goChat">去聊天约交接</view>
+      </view>
+      <view wx:else class="card verify">
+        <view wx:if="{{claimText}}" class="quiet">{{claimText}}，可以再答一次。</view>
+        <view class="verify-q">是你的吗？拾得者想确认一下：{{item.verifyQuestion}}</view>
+        <input class="verify-input" placeholder="只有失主知道的答案" maxlength="60" value="{{answer}}" bindinput="onAnswer" />
+        <view class="btn btn-lost" bindtap="claim">{{busy ? '提交中…' : '这是我的，回答并认领'}}</view>
+        <view wx:if="{{myLostPosts.length === 0}}" class="quiet">还没登记丢的东西？点上面会先带你去登记，30 秒就好。</view>
+      </view>
+      <button class="btn btn-ghost share-ghost" open-type="share">不是我的，转发给可能的失主</button>
+    </block>
+
+    <!-- 别人丢的：捡到的人来发布 -->
+    <block wx:else>
+      <view class="btn btn-found" bindtap="found">我捡到了</view>
+      <button class="btn btn-ghost share-ghost" open-type="share">转发到群里帮忙找</button>
+    </block>
+
+    <view wx:if="{{!item.isMine}}" class="quiet report" bindtap="report">举报这条发布</view>
+  </block>
+
+  <privacy-popup />
+</view>
