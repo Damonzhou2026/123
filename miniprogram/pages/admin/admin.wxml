@@ -1,0 +1,32 @@
+<view class="page">
+  <view wx:if="{{loading}}" class="quiet empty">正在加载…</view>
+
+  <view wx:elif="{{!admin}}" class="card setup">
+    <view class="title">还没有权限</view>
+    <view class="quiet">在云开发控制台给云函数 stats 加环境变量 ADMIN_OPENIDS，值填下面这串（多个人用英文逗号隔开），保存后回来下拉刷新。</view>
+    <view class="openid" bindtap="copyOpenid">{{openid}}</view>
+    <view class="quiet">点上面那串可以复制</view>
+  </view>
+
+  <block wx:else>
+    <view class="cards">
+      <view class="card stat"><view class="num">{{users}}</view><view class="quiet">用过提醒或评分的人</view></view>
+      <view class="card stat"><view class="num {{pendingReports > 0 ? 'warn' : ''}}">{{pendingReports}}</view><view class="quiet">待处理举报</view></view>
+      <view class="card stat"><view class="num">{{blocked}}</view><view class="quiet">已下架发布</view></view>
+    </view>
+
+    <view class="section">每周（北京时间，周一开始）</view>
+    <view class="card table">
+      <view class="tr th">
+        <view class="td week">周</view><view class="td">失物</view><view class="td">拾物</view>
+        <view class="td">配对</view><view class="td">归还</view><view class="td rate">7天找回</view>
+      </view>
+      <view wx:for="{{rows}}" wx:key="start" class="tr">
+        <view class="td week">{{item.label}}</view><view class="td">{{item.lost}}</view><view class="td">{{item.found}}</view>
+        <view class="td">{{item.matched}}</view><view class="td">{{item.returned}}</view><view class="td rate">{{item.rateText}}</view>
+      </view>
+    </view>
+    <view class="quiet note">7 天找回：这周登记的失物里，7 天内确认拿回的比例；登记不满 7 天的先不算，显示“—”。目标是每周发布 50 条以上、7 天找回率 30% 以上。</view>
+    <view wx:if="{{truncated}}" class="quiet note">数据太多，只统计了最近 2000 条。</view>
+  </block>
+</view>

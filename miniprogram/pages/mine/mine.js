@@ -79,6 +79,11 @@ Page({
     await this.load();
   },
 
+  // 运营入口：长按邮箱那行字。没配权限的人进去只会看到“还没有权限”
+  openAdmin() {
+    wx.navigateTo({ url: '/pages/admin/admin' });
+  },
+
   async deleteAccount() {
     const { confirm } = await wx.showModal({
       title: '注销账号？',

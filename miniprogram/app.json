@@ -6,7 +6,8 @@
     "pages/item/item",
     "pages/chat/chat",
     "pages/mine/mine",
-    "pages/legal/legal"
+    "pages/legal/legal",
+    "pages/admin/admin"
   ],
   "window": {
     "navigationBarBackgroundColor": "#FFF8F3",

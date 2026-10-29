@@ -20,6 +20,6 @@
     <text>·</text>
     <navigator url="/pages/legal/legal?doc=privacy" class="legal-link">隐私政策</navigator>
   </view>
-  <view class="quiet contact">其他问题请发邮件到 {{email}}</view>
+  <view class="quiet contact" bindlongpress="openAdmin">其他问题请发邮件到 {{email}}</view>
   <view class="quiet contact"><text class="danger-link" bindtap="deleteAccount">注销账号</text></view>
 </view>
