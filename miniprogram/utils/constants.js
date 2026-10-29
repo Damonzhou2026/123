@@ -7,6 +7,9 @@ const MAX_CUSTOM_CATEGORY = 10;
 // 证件类不开启感谢金，引导交给派出所或场馆服务台
 const NO_REWARD_CATEGORIES = ['证件'];
 
+// 这几类捡到的东西，照片不在首页公开（可能拍到证件号、卡号），和 cloudfunctions/listNearby 保持一致
+const PRIVATE_PHOTO_CATEGORIES = ['证件', '钱包', '手机'];
+
 // 感谢金托管开关。普通商户分账上限 30%，不够给拾得者，先关掉，感谢金由失主线下直接给。
 // 接好持牌分账服务商后改成 true，聊天页的托管入口就会回来（cloudfunctions/reward 代码保留）
 const ESCROW_ENABLED = false;
@@ -20,4 +23,4 @@ const MAX_REWARD = 10000;
 // 每条发布最多几张照片，和 cloudfunctions/createPost 的校验（1～3 张）保持一致
 const MAX_PHOTOS = 3;
 
-module.exports = { CATEGORIES, OTHER_CATEGORY, MAX_CUSTOM_CATEGORY, NO_REWARD_CATEGORIES, MAX_REWARD, MAX_PHOTOS, ESCROW_ENABLED, MESSAGE_TEMPLATE_ID };
+module.exports = { PRIVATE_PHOTO_CATEGORIES, CATEGORIES, OTHER_CATEGORY, MAX_CUSTOM_CATEGORY, NO_REWARD_CATEGORIES, MAX_REWARD, MAX_PHOTOS, ESCROW_ENABLED, MESSAGE_TEMPLATE_ID };

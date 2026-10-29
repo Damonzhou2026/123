@@ -1,6 +1,7 @@
 // 云数据库集合只允许云函数访问，所以聊天页定时拉取新消息
 const { ESCROW_ENABLED } = require('../../utils/constants');
 const { askMessageNotify, MESSAGE_TEMPLATE_ID } = require('../../utils/notify');
+const { report } = require('../../utils/report');
 
 const POLL_MS = 3000;
 const TAGS = ['守时', '热心', '沟通顺畅', '物品完好', '有礼貌'];
@@ -178,6 +179,10 @@ Page({
     } finally {
       this.busy = false;
     }
+  },
+
+  report() {
+    report('claim', this.claimId);
   },
 
   onDraft(e) {

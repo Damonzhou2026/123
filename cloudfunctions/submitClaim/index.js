@@ -18,6 +18,7 @@ exports.main = async (event) => {
     posts.doc(event.foundPostId).get().then((r) => r.data).catch(() => null)
   ]);
   if (!lost || lost.type !== 'lost' || lost._openid !== OPENID) return { ok: false, message: '只能用自己的丢失发布来认领' };
+  if (lost.status !== 'open') return { ok: false, message: '你的这条丢失发布已经不在匹配中了' };
   if (!found || found.type !== 'found' || found.status !== 'open') return { ok: false, message: '这件物品已经不能认领了' };
   if (found._openid === OPENID) return { ok: false, message: '不能认领自己捡到的物品' };
 

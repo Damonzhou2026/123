@@ -35,3 +35,4 @@
 
 .legal { display: flex; justify-content: center; gap: 16rpx; margin-top: 60rpx; }
 .legal-link { color: var(--quiet); }
+.thumb-hidden { display: flex; align-items: center; justify-content: center; font-size: 26rpx; font-weight: 700; color: var(--found-ink); background: var(--found-tint); }

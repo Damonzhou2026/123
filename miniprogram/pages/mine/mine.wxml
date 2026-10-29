@@ -10,8 +10,9 @@
         <text class="item-title">{{item.title}}</text>
       </view>
       <view class="quiet">{{item.placeName}} · {{item.timeText}}</view>
-      <view class="status {{item.status === 'blocked' ? 'status-blocked' : item.status !== 'open' ? 'status-matched' : ''}}">{{item.statusText}}</view>
+      <view class="status {{item.status === 'blocked' ? 'status-blocked' : item.status === 'matched' || item.status === 'closed' ? 'status-matched' : ''}}">{{item.statusText}}</view>
     </view>
+    <view class="manage" catchtap="manage" data-index="{{index}}">管理</view>
   </view>
 
   <view class="legal quiet">
@@ -19,5 +20,6 @@
     <text>·</text>
     <navigator url="/pages/legal/legal?doc=privacy" class="legal-link">隐私政策</navigator>
   </view>
-  <view class="quiet contact">删除发布、注销或投诉，请发邮件到 {{email}}</view>
+  <view class="quiet contact">其他问题请发邮件到 {{email}}</view>
+  <view class="quiet contact"><text class="danger-link" bindtap="deleteAccount">注销账号</text></view>
 </view>

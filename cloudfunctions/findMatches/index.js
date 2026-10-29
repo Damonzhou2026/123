@@ -66,7 +66,7 @@ exports.main = async (event) => {
 };
 
 function publicPost(post) {
-  return { _id: post._id, type: post.type, status: post.status, photos: post.photos, matchedClaimId: post.matchedClaimId || '' };
+  return { _id: post._id, type: post.type, status: post.status, photos: post.photos, matchedClaimId: post.matchedClaimId || '', blockReason: post.blockReason || '' };
 }
 
 function claimStatusFor(claims, foundPostId) {

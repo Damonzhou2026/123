@@ -18,6 +18,8 @@ exports.main = async (event) => {
       if (claim.status !== 'returned') return tx.rollback('确认拿回之后才能评价');
 
       const rateeOpenid = claim.claimantOpenid === OPENID ? claim.finderOpenid : claim.claimantOpenid;
+      // 对方注销后认领上的身份会被抹成 deleted
+      if (rateeOpenid === 'deleted') return tx.rollback('对方已经注销，不能评价了');
       // 用固定 id 保证一人一次
       const ratingId = `${claim._id}_${OPENID}`;
       const existing = await tx.collection('ratings').doc(ratingId).get().then((r) => r.data).catch(() => null);

@@ -1,4 +1,4 @@
-const { CATEGORIES, OTHER_CATEGORY, MAX_CUSTOM_CATEGORY, NO_REWARD_CATEGORIES, MAX_REWARD, MAX_PHOTOS } = require('../../utils/constants');
+const { PRIVATE_PHOTO_CATEGORIES, CATEGORIES, OTHER_CATEGORY, MAX_CUSTOM_CATEGORY, NO_REWARD_CATEGORIES, MAX_REWARD, MAX_PHOTOS } = require('../../utils/constants');
 const { askMessageNotify } = require('../../utils/notify');
 
 Page({
@@ -8,6 +8,8 @@ Page({
     otherCategory: OTHER_CATEGORY,
     maxCustomCategory: MAX_CUSTOM_CATEGORY,
     categoryIndex: 0,
+    // 证件、钱包、手机：照片不在首页公开
+    privatePhoto: PRIVATE_PHOTO_CATEGORIES.includes(CATEGORIES[0]),
     customCategory: '',
     photoPaths: [],
     maxPhotos: MAX_PHOTOS,
@@ -61,6 +63,7 @@ Page({
   onCategory(e) {
     const categoryIndex = Number(e.detail.value);
     const rewardAllowed = !NO_REWARD_CATEGORIES.includes(CATEGORIES[categoryIndex]);
+    this.setData({ privatePhoto: PRIVATE_PHOTO_CATEGORIES.includes(CATEGORIES[categoryIndex]) });
     if (rewardAllowed) this.setData({ categoryIndex, rewardAllowed });
     else this.setData({ categoryIndex, rewardAllowed, reward: 0, customReward: false, customRewardText: '' });
   },

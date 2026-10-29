@@ -10,7 +10,7 @@ exports.main = async () => {
     .where({ _openid: OPENID })
     .orderBy('createdAt', 'desc')
     .limit(50)
-    .field({ type: 1, title: 1, photos: 1, placeName: 1, status: 1, createdAt: 1, matchedClaimId: 1 })
+    .field({ type: 1, title: 1, photos: 1, placeName: 1, status: 1, createdAt: 1, matchedClaimId: 1, blockReason: 1 })
     .get();
   return { ok: true, items: data };
 };

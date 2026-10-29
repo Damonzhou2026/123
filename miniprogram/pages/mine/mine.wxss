@@ -10,3 +10,5 @@
 .legal { display: flex; justify-content: center; gap: 16rpx; margin-top: 60rpx; }
 .legal-link { color: var(--quiet); }
 .contact { text-align: center; margin-top: 12rpx; }
+.manage { flex: none; font-size: 24rpx; color: var(--quiet); padding: 16rpx 0 16rpx 16rpx; }
+.danger-link { color: #D93025; }
