@@ -26,6 +26,7 @@
     </picker>
     <input wx:if="{{categories[categoryIndex] === otherCategory}}" class="input custom-category" placeholder="具体是什么？比如：雨伞、充电宝"
            value="{{customCategory}}" bindinput="onCustomCategory" maxlength="{{maxCustomCategory}}" focus="{{categories[categoryIndex] === otherCategory}}" />
+    <view wx:if="{{!isLost && privatePhoto}}" class="quiet hint">这类东西的照片不会在首页公开，只给附近登记了失物、可能是失主的人看。拍照时请遮住证件号、卡号。</view>
   </view>
 
   <view class="field">

@@ -29,7 +29,8 @@
   <view wx:elif="{{items.length === 0}}" class="quiet empty">附近 3 公里内暂时没有人捡到东西</view>
 
   <view wx:for="{{items}}" wx:key="_id" class="card item">
-    <image class="thumb" src="{{item.photos[0]}}" mode="aspectFill" />
+    <view wx:if="{{item.photoHidden}}" class="thumb thumb-hidden">{{item.category}}</view>
+    <image wx:else class="thumb" src="{{item.photos[0]}}" mode="aspectFill" />
     <view class="item-body">
       <view>
         <text class="tag tag-found">捡到</text>

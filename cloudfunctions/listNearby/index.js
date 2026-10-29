@@ -4,6 +4,9 @@ cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 const db = cloud.database();
 
 const RADIUS_M = 3000;
+// 首页对附近所有人公开。这几类照片可能拍到证件号、卡号、手机里的内容，首页不给看，
+// 只在匹配页给发了失物的人看。和 miniprogram/utils/constants.js 保持一致
+const PRIVATE_PHOTO_CATEGORIES = ['证件', '钱包', '手机'];
 
 exports.main = async (event) => {
   const { latitude, longitude } = event;
@@ -26,8 +29,11 @@ exports.main = async (event) => {
     .project({ title: 1, category: 1, photos: 1, placeName: 1, createdAt: 1, distance: 1 })
     .end();
 
-  const urls = await toTempUrls(list.map((p) => (p.photos || [])[0]));
-  const items = list.map((p) => ({ ...p, photos: (p.photos || []).map((id) => urls[id] || id) }));
+  const shown = list.map((p) => (PRIVATE_PHOTO_CATEGORIES.includes(p.category)
+    ? { ...p, photos: [], photoHidden: true }
+    : { ...p, photos: (p.photos || []).slice(0, 1) }));
+  const urls = await toTempUrls(shown.map((p) => p.photos[0]));
+  const items = shown.map((p) => ({ ...p, photos: p.photos.map((id) => urls[id] || id) }));
   return { ok: true, items };
 };
 
