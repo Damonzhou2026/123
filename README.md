@@ -31,7 +31,7 @@
 1. 安装[微信开发者工具](https://developers.weixin.qq.com/miniprogram/dev/devtools/download.html)，用“导入项目”打开这个文件夹。
 2. 在[微信公众平台](https://mp.weixin.qq.com/)注册小程序，把 AppID 填进 `project.config.json` 的 `appid`。
 3. 在开发者工具里点“云开发”，创建一个环境，把环境 ID 填进 `miniprogram/app.js` 的 `CLOUD_ENV`。
-4. 在云开发控制台的数据库里新建集合 `posts`、`claims`、`messages`、`ratings`、`users`、`payments`、`reports` 和 `calibration`，并给 `posts` 的 `location` 字段加一个**地理位置索引**（附近查询要用到）。这几个集合的权限都设成“所有用户不可读写”，只让云函数访问。
+4. 在云开发控制台的数据库里新建集合 `posts`、`claims`、`messages`、`ratings`、`users` 和 `payments`（`reports`、`calibration` 第一次用到时云函数会自动建，不用手动建），并给 `posts` 的 `location` 字段加一个**地理位置索引**（附近查询要用到）。这几个集合的权限都设成“所有用户不可读写”，只让云函数访问。
    云存储保持默认的“仅创建者可读写”就行：别人的照片由云函数换成临时链接再返回（免费套餐也改不了存储权限）。
    再按下面“数据库索引”加几个普通索引。
 5. 在 `cloudfunctions` 下面的每个文件夹上分别右键，选“上传并部署：云端安装依赖”。
