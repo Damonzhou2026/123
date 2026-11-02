@@ -45,7 +45,8 @@ exports.main = async () => {
     descriptions: posts.map((p) => ({ title: p.title, description: p.photoDescription || '' })),
     createdAt: new Date()
   };
-  await db.collection('calibration').doc('latest').set({ data: result }).catch((err) => console.error('保存结果失败', err));
+  await withCollection('calibration', () => db.collection('calibration').doc('latest').set({ data: result }))
+    .catch((err) => console.error('保存结果失败', err));
   return { ok: true, ...result };
 };
 
@@ -91,4 +92,15 @@ function summary(sorted) {
 
 function round(x) {
   return Math.round(x * 1000) / 1000;
+}
+
+// 集合还没建时自动建一个，省得去控制台手动建（已经存在时 createCollection 会报错，忽略就行）
+async function withCollection(name, fn) {
+  try {
+    return await fn();
+  } catch (err) {
+    if (!/not exist|不存在|DATABASE_COLLECTION_NOT_EXIST|-502005/i.test(`${err.errCode || ''} ${err.message || err.errMsg || ''}`)) throw err;
+    await db.createCollection(name).catch(() => {});
+    return fn();
+  }
 }

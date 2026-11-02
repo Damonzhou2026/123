@@ -39,7 +39,7 @@ exports.main = async (event) => {
 
   const reports = db.collection('reports');
   const since = new Date(Date.now() - 24 * 3600 * 1000);
-  const { total: today } = await reports.where({ reporterOpenid: OPENID, createdAt: _.gte(since) }).count();
+  const { total: today } = await withCollection('reports', () => reports.where({ reporterOpenid: OPENID, createdAt: _.gte(since) }).count());
   if (today >= MAX_PER_DAY) return { ok: false, message: '今天举报次数太多了，请明天再试或发邮件联系我们' };
 
   // 一个人对同一个对象只记一次
@@ -70,3 +70,14 @@ exports.main = async (event) => {
   }
   return { ok: true };
 };
+
+// 集合还没建时自动建一个，省得去控制台手动建（已经存在时 createCollection 会报错，忽略就行）
+async function withCollection(name, fn) {
+  try {
+    return await fn();
+  } catch (err) {
+    if (!/not exist|不存在|DATABASE_COLLECTION_NOT_EXIST|-502005/i.test(`${err.errCode || ''} ${err.message || err.errMsg || ''}`)) throw err;
+    await db.createCollection(name).catch(() => {});
+    return fn();
+  }
+}
