@@ -8,9 +8,9 @@ const read = (p) => fs.readFileSync(path.join(root, p), 'utf8');
 
 // 必须一模一样的文件
 const SAME_FILES = {
-  'push.js': ['sendMessage', 'submitClaim', 'reviewClaim', 'createPost', 'dailyJobs'],
-  'template.js': ['sendMessage', 'submitClaim', 'reviewClaim', 'createPost', 'dailyJobs'],
-  'secCheck.js': ['createPost', 'submitClaim', 'sendMessage'],
+  'push.js': ['sendMessage', 'submitClaim', 'reviewClaim', 'createPost', 'dailyJobs', 'tag'],
+  'template.js': ['sendMessage', 'submitClaim', 'reviewClaim', 'createPost', 'dailyJobs', 'tag'],
+  'secCheck.js': ['createPost', 'submitClaim', 'sendMessage', 'tag'],
   'scoring.js': ['findMatches', 'createPost']
 };
 
@@ -19,7 +19,8 @@ const SAME_CONSTANTS = [
   [['miniprogram/utils/constants.js', 'CATEGORIES'], ['cloudfunctions/createPost/index.js', 'CATEGORIES']],
   [['miniprogram/utils/constants.js', 'NO_REWARD_CATEGORIES'], ['cloudfunctions/createPost/index.js', 'NO_REWARD_CATEGORIES']],
   [['miniprogram/utils/constants.js', 'MAX_REWARD'], ['cloudfunctions/createPost/index.js', 'MAX_REWARD']],
-  [['miniprogram/utils/constants.js', 'MAX_CUSTOM_CATEGORY'], ['cloudfunctions/createPost/index.js', 'MAX_CUSTOM_CATEGORY']],
+  [['miniprogram/utils/constants.js', 'MAX_CUSTOM_CATEGORY'], ['cloudfunctions/createPost/index.js', 'MAX_CUSTOM_CATEGORY'], ['cloudfunctions/tag/index.js', 'MAX_CUSTOM_CATEGORY']],
+  [['miniprogram/utils/constants.js', 'CATEGORIES'], ['cloudfunctions/tag/index.js', 'CATEGORIES']],
   [['miniprogram/utils/constants.js', 'PRIVATE_PHOTO_CATEGORIES'], ['cloudfunctions/listNearby/index.js', 'PRIVATE_PHOTO_CATEGORIES'], ['cloudfunctions/getPost/index.js', 'PRIVATE_PHOTO_CATEGORIES']],
   [['miniprogram/pages/chat/chat.js', 'CANCEL_REASONS'], ['cloudfunctions/reviewClaim/index.js', 'CANCEL_REASONS']],
   [['miniprogram/utils/report.js', 'REASONS'], ['cloudfunctions/report/index.js', 'REASONS']]

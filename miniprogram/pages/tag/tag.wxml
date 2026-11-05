@@ -1,0 +1,167 @@
+<view class="page {{view === 'others' ? 'side-found' : 'side-lost'}}">
+  <view wx:if="{{loading}}" class="quiet empty">正在加载…</view>
+
+  <view wx:elif="{{error}}" class="empty">
+    <view class="quiet">{{error}}</view>
+    <view class="btn btn-ghost home" bindtap="goHome">去掉了么首页</view>
+  </view>
+
+  <!-- 绑定 / 编辑 -->
+  <block wx:elif="{{view === 'unbound' || editing}}">
+    <view class="intro">
+      <view class="intro-title">{{editing ? '修改防丢贴信息' : '把这张防丢贴绑到你的东西上'}}</view>
+      <view wx:if="{{!editing}}" class="quiet">有人捡到扫码，就能在小程序里通知你。对方看不到你的手机号和微信。</view>
+    </view>
+
+    <view wx:if="{{!form.photoPreview}}" class="photo" bindtap="choosePhoto">
+      <view class="photo-empty">
+        <view class="photo-title">拍一张这件东西（选填）</view>
+        <view class="quiet">丢了的时候 AI 靠它帮你匹配</view>
+      </view>
+    </view>
+    <view wx:else class="photo">
+      <image class="photo-img" src="{{form.photoPreview}}" mode="aspectFill" bindtap="choosePhoto" />
+      <view class="photo-remove" catchtap="removePhoto">×</view>
+    </view>
+
+    <view class="field">
+      <view class="label">物品名称</view>
+      <input class="input" placeholder="比如：黑色双肩包、家门钥匙" value="{{form.title}}" bindinput="onTitle" maxlength="20" />
+    </view>
+
+    <view class="field">
+      <view class="label">类别</view>
+      <picker range="{{categories}}" value="{{form.categoryIndex}}" bindchange="onCategory">
+        <view class="input">{{categories[form.categoryIndex]}}</view>
+      </picker>
+      <input wx:if="{{categories[form.categoryIndex] === otherCategory}}" class="input gap" placeholder="具体是什么？比如：雨伞"
+             value="{{form.customCategory}}" bindinput="onCustomCategory" maxlength="{{maxCustomCategory}}" />
+    </view>
+
+    <view class="field">
+      <view class="label">想对捡到的人说的话（选填）</view>
+      <input class="input" placeholder="比如：谢谢你！我会当面感谢" value="{{form.note}}" bindinput="onNote" maxlength="30" />
+      <view class="quiet hint">不要写姓名、学校、班级、住址和电话。</view>
+    </view>
+
+    <view class="field switch-row">
+      <view>
+        <view>这是孩子的东西</view>
+        <view class="quiet">打开后，扫码的人看不到照片和你写的话，只知道是小朋友的东西</view>
+      </view>
+      <switch checked="{{form.forChild}}" bindchange="onForChild" color="#E0480F" />
+    </view>
+
+    <view wx:if="{{smsEnabled}}" class="field">
+      <view class="label">手机号（选填，只用来发短信提醒）</view>
+      <block wx:if="{{editing && tag.phone && !form.changePhone}}">
+        <view class="input phone-row">
+          <text>{{tag.phone}}</text>
+          <text class="link" bindtap="onChangePhone">换一个</text>
+        </view>
+        <view class="quiet hint"><text class="link" bindtap="removePhone">删除手机号</text></view>
+      </block>
+      <block wx:else>
+        <input class="input" type="number" placeholder="11 位手机号" value="{{form.phone}}" bindinput="onPhone" maxlength="11" />
+        <view wx:if="{{form.phone.length === 11}}" class="input code-row gap">
+          <input class="code-input" type="number" placeholder="短信验证码" value="{{form.smsCode}}" bindinput="onSmsCode" maxlength="6" />
+          <text class="link" bindtap="sendCode">{{countdown > 0 ? countdown + ' 秒后重发' : '获取验证码'}}</text>
+        </view>
+        <view class="quiet hint">微信提醒发不出去时，才会给这个号码发一条短信。捡到的人看不到。</view>
+      </block>
+    </view>
+
+    <view class="btn btn-lost submit" bindtap="saveForm">{{saving ? '保存中…' : (editing ? '保存' : '绑定')}}</view>
+    <view wx:if="{{editing}}" class="btn btn-ghost gap" bindtap="cancelEdit">取消</view>
+  </block>
+
+  <!-- 主人自己扫 -->
+  <block wx:elif="{{view === 'mine'}}">
+    <view class="card item">
+      <image wx:if="{{tag.photoUrl}}" class="thumb" src="{{tag.photoUrl}}" mode="aspectFill" />
+      <view wx:else class="thumb thumb-empty">{{tag.customCategory || tag.category}}</view>
+      <view class="item-body">
+        <view class="item-title">{{tag.title}}</view>
+        <view class="quiet">编号 {{code}}</view>
+        <view class="status status-{{tag.status}}">{{tag.status === 'lost' ? '丢失中，正在帮你找' : tag.status === 'paused' ? '已暂停提醒' : '使用中'}}</view>
+      </view>
+    </view>
+    <view wx:if="{{tag.blocked}}" class="quiet hint warn">照片没通过审核，扫码的人看不到。请换一张。</view>
+
+    <block wx:if="{{tag.status === 'lost'}}">
+      <view class="btn btn-lost" bindtap="openLostPost">看看 AI 匹配</view>
+      <view class="btn btn-ghost gap" bindtap="recovered">找回来了</view>
+    </block>
+    <view wx:elif="{{tag.status === 'active'}}" class="btn btn-lost" bindtap="markLost">丢了，帮我找</view>
+    <view class="quiet hint">点“丢了”会用这张防丢贴的名称和照片发一条失物，附近有人捡到像的东西会提醒你。</view>
+
+    <view wx:if="{{claims.length}}" class="section">
+      <view class="section-title">捡到过它的人</view>
+      <view wx:for="{{claims}}" wx:key="_id" class="card row" bindtap="openClaim" data-id="{{item._id}}">
+        <text>有人捡到了 · {{item.timeText}}</text>
+        <text class="quiet">{{item.statusText}} ›</text>
+      </view>
+    </view>
+
+    <view class="actions">
+      <view class="action" bindtap="startEdit">编辑</view>
+      <view class="action" bindtap="enableNotify">开启微信提醒</view>
+      <view class="action" bindtap="togglePause">{{tag.status === 'paused' ? '恢复提醒' : '暂停提醒'}}</view>
+      <view class="action danger" bindtap="unbind">解绑</view>
+    </view>
+    <view class="quiet hint">
+      有人扫码说捡到了，会先用微信提醒你{{tag.phone ? '，微信提醒不了再发短信到 ' + tag.phone : ''}}。
+      每次“开启微信提醒”可以多收一次提醒，建议多点几次攒着。
+    </view>
+  </block>
+
+  <!-- 别人扫到 -->
+  <block wx:elif="{{view === 'others'}}">
+    <view class="hero">
+      <image wx:if="{{tag.photoUrl}}" class="hero-photo" src="{{tag.photoUrl}}" mode="aspectFill" />
+      <view class="hero-title">{{tag.forChild ? '这是小朋友的东西' : '你捡到了别人的' + tag.title + '？'}}</view>
+      <view class="quiet">{{tag.forChild ? '请帮忙联系家长，谢谢你。' : '这件' + tag.category + '贴了掉了么防丢贴，点下面就能通知主人。'}}</view>
+      <view wx:if="{{tag.note}}" class="note">主人说：{{tag.note}}</view>
+      <view wx:if="{{tag.status === 'lost'}}" class="lost-badge">主人正在找它</view>
+    </view>
+
+    <view wx:if="{{tag.status === 'paused'}}" class="card quiet">主人暂停了这张防丢贴的提醒。可以把东西交给附近的服务台、保安或派出所。</view>
+
+    <view wx:elif="{{myClaimId}}" class="btn btn-found" bindtap="openMyClaim">继续和主人聊</view>
+
+    <block wx:elif="{{!reportOpen}}">
+      <view class="btn btn-found" bindtap="openReport">我捡到了</view>
+      <view class="quiet hint center">不用下载、不用注册。主人看不到你的微信和手机号，你也看不到主人的。</view>
+    </block>
+
+    <block wx:else>
+      <view class="field">
+        <view class="label">给主人留言</view>
+        <textarea class="textarea" placeholder="比如：在图书馆二楼捡到的，我下午都在" value="{{reportText}}" bindinput="onReportText" maxlength="200" />
+      </view>
+      <view class="field">
+        <view class="label">拍张照片（选填）</view>
+        <view class="photo-grid">
+          <view wx:for="{{reportPhotos}}" wx:key="*this" class="photo-cell">
+            <image src="{{item}}" mode="aspectFill" class="photo-img" />
+            <view class="photo-remove" data-index="{{index}}" catchtap="removeReportPhoto">×</view>
+          </view>
+          <view wx:if="{{reportPhotos.length < maxReportPhotos}}" class="photo-cell photo-add" bindtap="chooseReportPhotos">+</view>
+        </view>
+      </view>
+      <view class="field">
+        <view class="label">在哪捡到的（选填）</view>
+        <view class="input" bindtap="chooseReportPlace">{{reportPlace || '点击选择位置'}}</view>
+      </view>
+      <view class="btn btn-found submit" bindtap="submitReport">{{reporting ? '提交中…' : '通知主人'}}</view>
+      <view class="quiet hint center">主人会马上收到提醒，你们在小程序里约归还方式。不要先转账、交押金或给验证码。</view>
+    </block>
+
+    <view class="footer quiet">
+      <view>捡到的是别的东西？<text class="link" bindtap="postOther">拍照发布，帮它找主人</text></view>
+      <view class="gap"><text class="link" bindtap="goHome">掉了么是什么</text></view>
+    </view>
+  </block>
+
+  <privacy-popup />
+</view>

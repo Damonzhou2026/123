@@ -15,7 +15,7 @@ exports.main = async (event) => {
   const posts = db.collection('posts');
   const { data } = await posts.where({ 'mediaCheck.traceIds': traceId }).limit(1).get();
   const post = data[0];
-  if (!post) return 'success';
+  if (!post) return checkTag(traceId, suggest);
 
   const update = { 'mediaCheck.checkedAt': db.serverDate() };
   if (suggest === 'risky') {
@@ -28,3 +28,14 @@ exports.main = async (event) => {
   await posts.doc(post._id).update({ data: update });
   return 'success';
 };
+
+// 防丢贴的照片：违规的话扫码的人就看不到这张照片了（tag 云函数按 mediaCheck.result 判断）
+async function checkTag(traceId, suggest) {
+  const tags = db.collection('tags');
+  const { data } = await tags.where({ 'mediaCheck.traceIds': traceId }).limit(1).get().catch(() => ({ data: [] }));
+  const tag = data[0];
+  if (!tag) return 'success';
+  const result = suggest === 'risky' ? 'risky' : (tag.mediaCheck.result === 'risky' ? 'risky' : 'pass');
+  await tags.doc(tag._id).update({ data: { 'mediaCheck.result': result, 'mediaCheck.checkedAt': db.serverDate() } });
+  return 'success';
+}

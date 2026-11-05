@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "掉了么防丢贴",
+  "usingComponents": {
+    "privacy-popup": "/components/privacy-popup/privacy-popup"
+  }
+}

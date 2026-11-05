@@ -85,8 +85,10 @@ async function cancelMatch(event) {
 
       const role = data.claimantOpenid === OPENID ? 'owner' : 'finder';
       await claimRef.update({ data: { status: 'cancelled', cancelledBy: role, cancelReason: reason, cancelledAt: db.serverDate() } });
+      // 防丢贴扫码建的两条发布只为这段对话存在，取消后直接关掉，不回到匹配中
+      const status = data.source === 'tag' ? 'closed' : 'open';
       for (const id of [data.foundPostId, data.lostPostId]) {
-        await tx.collection('posts').doc(id).update({ data: { status: 'open', matchedClaimId: '' } });
+        await tx.collection('posts').doc(id).update({ data: { status, matchedClaimId: '' } });
       }
       return { ...data, cancelledBy: role };
     });
@@ -101,7 +103,9 @@ async function cancelMatch(event) {
     text: `对方取消了配对：${reason}`,
     sender: toOwner ? '拾得者' : '失主',
     title: title || '',
-    page: `pages/matches/matches?id=${toOwner ? claim.lostPostId : claim.foundPostId}`
+    page: claim.source === 'tag'
+      ? `pages/chat/chat?claimId=${claim._id}`
+      : `pages/matches/matches?id=${toOwner ? claim.lostPostId : claim.foundPostId}`
   });
   return { ok: true };
 }

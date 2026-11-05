@@ -18,3 +18,13 @@
 .week { flex: 1.2; text-align: left; }
 .rate { flex: 1.4; }
 .note { margin-top: 16rpx; line-height: 1.6; }
+
+.tag-gen { display: flex; flex-direction: column; gap: 16rpx; line-height: 1.6; }
+.tag-row { display: flex; gap: 16rpx; }
+.tag-input { flex: 1; height: 80rpx; border: 1rpx solid var(--line); border-radius: 16rpx; padding: 0 20rpx; }
+.tag-input.wide { flex: 3; }
+.tag-btn { height: 80rpx; line-height: 80rpx; text-align: center; border-radius: 16rpx; background: var(--lost); color: #fff; font-weight: 700; }
+.codes { display: flex; flex-wrap: wrap; gap: 12rpx; }
+.code { font-family: monospace; font-size: 24rpx; background: var(--ground); border-radius: 12rpx; padding: 8rpx 12rpx; }
+.qr { display: flex; flex-direction: column; align-items: center; gap: 8rpx; }
+.qr-img { width: 400rpx; height: 400rpx; }

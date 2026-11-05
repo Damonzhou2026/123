@@ -7,7 +7,8 @@
     "pages/chat/chat",
     "pages/mine/mine",
     "pages/legal/legal",
-    "pages/admin/admin"
+    "pages/admin/admin",
+    "pages/tag/tag"
   ],
   "window": {
     "navigationBarBackgroundColor": "#FFF8F3",

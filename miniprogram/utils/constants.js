@@ -23,4 +23,8 @@ const MAX_REWARD = 10000;
 // 每条发布最多几张照片，和 cloudfunctions/createPost 的校验（1～3 张）保持一致
 const MAX_PHOTOS = 3;
 
-module.exports = { PRIVATE_PHOTO_CATEGORIES, CATEGORIES, OTHER_CATEGORY, MAX_CUSTOM_CATEGORY, NO_REWARD_CATEGORIES, MAX_REWARD, MAX_PHOTOS, ESCROW_ENABLED, MESSAGE_TEMPLATE_ID };
+// 防丢贴二维码里的网址前缀，后面接 8 位编号。域名备案好、在公众平台配好“扫普通链接二维码打开小程序”后填上，
+// 比如 'https://diaoleme.cn/t/?c='。留空时运营页只导出编号，测试先用小程序码
+const TAG_LINK_PREFIX = '';
+
+module.exports = { TAG_LINK_PREFIX, PRIVATE_PHOTO_CATEGORIES, CATEGORIES, OTHER_CATEGORY, MAX_CUSTOM_CATEGORY, NO_REWARD_CATEGORIES, MAX_REWARD, MAX_PHOTOS, ESCROW_ENABLED, MESSAGE_TEMPLATE_ID };

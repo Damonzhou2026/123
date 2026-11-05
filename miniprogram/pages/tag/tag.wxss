@@ -1,0 +1,109 @@
+.page { padding: 24rpx 40rpx 80rpx; }
+.side-lost { --accent: var(--lost); --accent-tint: var(--lost-tint); --accent-ink: var(--lost-ink); }
+.side-found { --accent: var(--found); --accent-tint: var(--found-tint); --accent-ink: var(--found-ink); }
+.empty { text-align: center; padding: 120rpx 0; line-height: 1.6; }
+.home { margin-top: 40rpx; }
+.gap { margin-top: 16rpx; }
+.center { text-align: center; }
+.link { color: var(--accent); text-decoration: underline; }
+.warn { color: #D93025; }
+
+.intro { margin-bottom: 28rpx; display: flex; flex-direction: column; gap: 8rpx; }
+.intro-title { font-size: 36rpx; font-weight: 700; }
+
+.photo {
+  position: relative;
+  height: 300rpx;
+  border: 3rpx dashed var(--accent);
+  border-radius: 32rpx;
+  background: var(--card);
+  overflow: hidden;
+  margin-bottom: 28rpx;
+}
+.photo-img { width: 100%; height: 100%; }
+.photo-empty { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8rpx; }
+.photo-title { font-weight: 500; }
+.photo-grid { display: flex; gap: 16rpx; }
+.photo-cell { position: relative; width: 200rpx; height: 200rpx; border-radius: 24rpx; overflow: hidden; background: var(--card); }
+.photo-add {
+  border: 3rpx dashed var(--accent);
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 64rpx;
+  color: var(--accent);
+}
+.photo-remove {
+  position: absolute;
+  top: 8rpx;
+  right: 8rpx;
+  width: 44rpx;
+  height: 44rpx;
+  line-height: 44rpx;
+  text-align: center;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 32rpx;
+}
+
+.field { margin-bottom: 28rpx; }
+.label { font-size: 26rpx; color: var(--quiet); margin-bottom: 12rpx; }
+.input {
+  height: 96rpx;
+  line-height: 96rpx;
+  border: 1rpx solid var(--line);
+  border-radius: 24rpx;
+  padding: 0 28rpx;
+  background: var(--card);
+}
+.textarea {
+  width: 100%;
+  box-sizing: border-box;
+  height: 200rpx;
+  border: 1rpx solid var(--line);
+  border-radius: 24rpx;
+  padding: 20rpx 28rpx;
+  background: var(--card);
+}
+.hint { margin-top: 12rpx; line-height: 1.6; }
+.switch-row { display: flex; align-items: center; justify-content: space-between; gap: 24rpx; }
+.phone-row, .code-row { display: flex; justify-content: space-between; align-items: center; }
+.code-input { flex: 1; height: 96rpx; }
+.submit { margin-top: 40rpx; }
+.btn-ghost { color: var(--ink); background: var(--card); border: 1rpx solid var(--line); font-weight: 500; }
+
+.item { display: flex; gap: 24rpx; align-items: center; margin-bottom: 28rpx; }
+.thumb { width: 140rpx; height: 140rpx; border-radius: 24rpx; background: var(--line); flex: none; }
+.thumb-empty { display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--lost-ink); background: var(--lost-tint); }
+.item-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8rpx; }
+.item-title { font-size: 34rpx; font-weight: 700; }
+.status { font-size: 26rpx; font-weight: 700; }
+.status-lost { color: var(--lost); }
+.status-paused { color: var(--quiet); }
+
+.section { margin-top: 40rpx; }
+.section-title { font-weight: 700; margin-bottom: 16rpx; }
+.row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16rpx; }
+
+.actions { display: flex; flex-wrap: wrap; gap: 16rpx; margin-top: 40rpx; }
+.action {
+  flex: 1;
+  min-width: 40%;
+  height: 88rpx;
+  line-height: 88rpx;
+  text-align: center;
+  border: 1rpx solid var(--line);
+  border-radius: 24rpx;
+  background: var(--card);
+}
+.danger { color: #D93025; }
+
+.hero { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 12rpx; margin: 16rpx 0 40rpx; }
+.hero-photo { width: 360rpx; height: 360rpx; border-radius: 32rpx; background: var(--line); }
+.hero-title { font-size: 38rpx; font-weight: 700; margin-top: 12rpx; }
+.note { background: var(--found-tint); color: var(--found-ink); border-radius: 20rpx; padding: 16rpx 24rpx; margin-top: 8rpx; }
+.lost-badge { background: var(--lost-tint); color: var(--lost-ink); font-weight: 700; border-radius: 12rpx; padding: 6rpx 16rpx; }
+
+.footer { text-align: center; margin-top: 60rpx; line-height: 1.8; }

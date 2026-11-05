@@ -28,5 +28,26 @@
     </view>
     <view class="quiet note">7 天找回：这周登记的失物里，7 天内确认拿回的比例；登记不满 7 天的先不算，显示“—”。目标是每周发布 50 条以上、7 天找回率 30% 以上。</view>
     <view wx:if="{{truncated}}" class="quiet note">数据太多，只统计了最近 2000 条。</view>
+
+    <view class="section">防丢贴编号</view>
+    <view class="card tag-gen">
+      <view class="quiet">云函数 tag 也要加同样的环境变量 ADMIN_OPENIDS。一次最多 500 个。</view>
+      <view class="tag-row">
+        <input class="tag-input" type="number" value="{{tagCount}}" bindinput="onTagCount" placeholder="数量" />
+        <input class="tag-input wide" value="{{tagBatch}}" bindinput="onTagBatch" placeholder="批次名（选填），比如 抖音第一批" maxlength="20" />
+      </view>
+      <view class="tag-btn" bindtap="generateTags">生成</view>
+      <block wx:if="{{tagCodes.length}}">
+        <view class="quiet">批次 {{tagBatch}}，共 {{tagCodes.length}} 个。{{tagLinkPrefix ? '复制的是二维码网址，每行一个，发给印刷厂。' : '还没填 TAG_LINK_PREFIX，复制的只是编号。'}}点编号可以生成测试用的小程序码。</view>
+        <view class="tag-btn" bindtap="copyTagLinks">复制全部</view>
+        <view class="codes">
+          <text wx:for="{{tagCodes}}" wx:key="*this" class="code" bindtap="makeQrcode" data-code="{{item}}">{{item}}</text>
+        </view>
+      </block>
+      <view wx:if="{{qrUrl}}" class="qr">
+        <image class="qr-img" src="{{qrUrl}}" mode="aspectFit" bindtap="previewQrcode" />
+        <view class="quiet">{{qrCode}} 的小程序码，点开长按可以保存</view>
+      </view>
+    </view>
   </block>
 </view>
