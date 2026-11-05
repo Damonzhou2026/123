@@ -83,6 +83,8 @@ exports.main = async (event) => {
 function claimState(claim) {
   return {
     status: claim.status,
+    // tag：防丢贴扫码开始的对话
+    source: claim.source || '',
     handedOver: !!claim.handedOverAt,
     cancel: claim.status === 'cancelled' ? { by: claim.cancelledBy, reason: claim.cancelReason || '' } : null
   };

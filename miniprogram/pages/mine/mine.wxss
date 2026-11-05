@@ -12,3 +12,6 @@
 .contact { text-align: center; margin-top: 12rpx; }
 .manage { flex: none; font-size: 24rpx; color: var(--quiet); padding: 16rpx 0 16rpx 16rpx; }
 .danger-link { color: #D93025; }
+.section-title { font-weight: 700; margin: 16rpx 0 20rpx; }
+.thumb-empty { display: flex; align-items: center; justify-content: center; font-size: 24rpx; font-weight: 700; color: var(--lost-ink); background: var(--lost-tint); }
+.tag-title { margin-left: 0; }

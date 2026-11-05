@@ -114,5 +114,23 @@ async function deleteAccount(event, openid) {
   await db.collection('ratings').where(_.or([{ raterOpenid: openid }, { rateeOpenid: openid }])).remove();
   await db.collection('reports').where({ reporterOpenid: openid }).remove().catch(() => {});
   await db.collection('users').doc(openid).remove().catch(() => {});
+  await releaseTags(openid);
   return { ok: true };
+}
+
+// 防丢贴：主人注销时贴纸解绑（清掉名称、照片、手机号），可以重新绑定；验证码记录和扫码记录也删掉
+async function releaseTags(openid) {
+  const { data } = await db.collection('tags').where({ ownerOpenid: openid }).field({ photo: 1 }).limit(100).get()
+    .catch(() => ({ data: [] }));
+  for (const tag of data) {
+    await db.collection('tags').doc(tag._id).update({
+      data: {
+        status: 'unbound', ownerOpenid: '', title: '', category: '', customCategory: '', note: '',
+        photo: '', forChild: false, phone: '', lostPostId: '', mediaCheck: _.remove(), unboundAt: db.serverDate()
+      }
+    });
+  }
+  await deletePhotos(data.map((t) => t.photo).filter(Boolean));
+  await db.collection('smsCodes').doc(openid).remove().catch(() => {});
+  await db.collection('tagReports').where({ finderOpenid: openid }).remove().catch(() => {});
 }

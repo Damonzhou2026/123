@@ -12,6 +12,7 @@ const scripts = [
   'cloudfunctions/rateUser/validate.test.js',
   'cloudfunctions/reward/reward.test.js',
   'cloudfunctions/sendMessage/template.test.js',
+  'cloudfunctions/tag/tag.test.js',
   'miniprogram/utils/safety.test.js'
 ];
 let failed = 0;

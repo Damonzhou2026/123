@@ -17,6 +17,7 @@ Page({
   data: {
     loading: true,
     items: [],
+    tags: [],
     email: OPERATOR.email
   },
 
@@ -29,6 +30,7 @@ Page({
   },
 
   async load() {
+    this.loadTags();
     try {
       const { result } = await wx.cloud.callFunction({ name: 'listMyPosts' });
       if (!result.ok) throw new Error(result.message);
@@ -44,6 +46,22 @@ Page({
       this.setData({ loading: false });
       wx.showToast({ title: err.message || '加载失败，下拉重试', icon: 'none' });
     }
+  },
+
+  // 我的防丢贴：失败不影响发布列表
+  async loadTags() {
+    const STATUS = { active: '使用中', lost: '丢失中', paused: '已暂停提醒' };
+    try {
+      const { result } = await wx.cloud.callFunction({ name: 'tag', data: { action: 'mine' } });
+      if (!result.ok) return;
+      this.setData({ tags: result.items.map((t) => ({ ...t, statusText: STATUS[t.status] || '' })) });
+    } catch (err) {
+      // 还没部署 tag 云函数时不显示这一栏
+    }
+  },
+
+  openTag(e) {
+    wx.navigateTo({ url: `/pages/tag/tag?code=${e.currentTarget.dataset.code}` });
   },
 
   open(e) {

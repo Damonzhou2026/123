@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>掉了么防丢贴</title>
+<style>
+  :root { --lost: #E0480F; --found: #2459E0; --ground: #FFF8F3; --ink: #1C1B19; --quiet: #5F5C55; --line: #F1E2D8; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--ground); color: var(--ink); font-family: -apple-system, "PingFang SC", "Noto Sans SC", sans-serif; }
+  main { max-width: 480px; margin: 0 auto; padding: 48px 20px; text-align: center; }
+  h1 { font-size: 24px; margin: 0 0 12px; }
+  p { color: var(--quiet); line-height: 1.7; margin: 0 0 16px; }
+  .code { font-family: monospace; letter-spacing: 2px; color: var(--ink); }
+  .btn { display: block; margin: 28px 0 12px; padding: 16px; border-radius: 14px; background: var(--found); color: #fff; font-size: 17px; font-weight: 700; text-decoration: none; }
+  .card { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 16px; text-align: left; margin-top: 28px; }
+  .card p { margin: 0 0 8px; font-size: 14px; }
+  .brand { color: var(--lost); font-weight: 700; }
+</style>
+</head>
+<body>
+<main>
+  <h1>你捡到了一件贴了<span class="brand">掉了么</span>防丢贴的东西</h1>
+  <p>谢谢你！在微信里打开就能通知主人。不用下载、不用注册，双方都看不到对方的手机号。</p>
+  <p id="code-line" hidden>防丢贴编号：<span class="code" id="code"></span></p>
+  <a class="btn" id="open" href="#">打开微信，通知主人</a>
+  <p>点了没反应？</p>
+  <div class="card">
+    <p>1. 打开微信，用“扫一扫”扫这张贴纸上的二维码；</p>
+    <p>2. 或者在微信里搜索小程序“掉了么”，点“我捡到东西”拍照发布，留言里写上上面的编号。</p>
+  </div>
+</main>
+<script>
+  // 二维码网址形如 https://你的域名/t/?c=K7M2Q9XA
+  var APPID = 'wx68d39aac44655a03';
+  var match = /[?&]c=([A-Za-z0-9]{8})/.exec(location.search);
+  var code = match ? match[1].toUpperCase() : '';
+  if (code) {
+    document.getElementById('code').textContent = code;
+    document.getElementById('code-line').hidden = false;
+  }
+  // 微信的明文 URL Scheme：要在公众平台“开发设置 → 明文 Scheme 拉起此小程序”里登记 pages/tag/tag
+  var scheme = 'weixin://dl/business/?appid=' + APPID + '&path=pages/tag/tag'
+    + (code ? '&query=' + encodeURIComponent('code=' + code) : '');
+  document.getElementById('open').href = scheme;
+</script>
+</body>
+</html>

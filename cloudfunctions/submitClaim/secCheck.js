@@ -1,5 +1,5 @@
 // 内容安全检测：文字用 security.msgSecCheck，图片用 security.mediaCheckAsync（微信审核要求）。
-// createPost、submitClaim、sendMessage 各放一份（云函数不能共用文件），改的时候三份一起改。
+// createPost、submitClaim、sendMessage、tag 各放一份（云函数不能共用文件），改的时候四份一起改。
 
 // 微信的场景值：1 资料，2 评论，3 论坛，4 社交日志
 const SCENE = { profile: 1, comment: 2, forum: 3, social: 4 };
