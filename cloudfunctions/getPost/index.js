@@ -9,6 +9,7 @@ const PRIVATE_PHOTO_CATEGORIES = ['证件', '钱包', '手机'];
 // 物品详情：首页点开、或者从微信群里的转发卡片点进来，谁都能看。
 // 拾物另外告诉看的人：他有哪些还在找的失物可以拿来认领，以及他之前认领过没有。
 exports.main = async (event) => {
+  if (event.action === 'shareCode') return shareCode(event);
   const { OPENID } = cloud.getWXContext();
   const post = await db.collection('posts').doc(event.id).get().then((r) => r.data).catch(() => null);
   const isMine = !!post && post._openid === OPENID;
@@ -69,4 +70,26 @@ async function toTempUrls(fileIDs) {
   if (ids.length === 0) return [];
   const { fileList } = await cloud.getTempFileURL({ fileList: ids });
   return fileList.map((f) => f.tempFileURL).filter(Boolean);
+}
+
+// 寻物海报上的小程序码：扫码打开这条发布的详情页（scene 就是发布 id，正好 32 位以内）。
+// 直接把图片转成 base64 返回，小程序写成本地文件画到海报上，不用存云存储
+async function shareCode(event) {
+  const post = await db.collection('posts').doc(String(event.id || '')).get().then((r) => r.data).catch(() => null);
+  if (!post || post.status === 'blocked') return { ok: false, message: '这条发布不存在或已下架' };
+  if (String(post._id).length > 32) return { ok: false, message: '这条发布生成不了小程序码' };
+  const envVersion = ['develop', 'trial', 'release'].includes(event.envVersion) ? event.envVersion : 'release';
+  try {
+    const res = await cloud.openapi.wxacode.getUnlimited({
+      scene: post._id,
+      page: 'pages/item/item',
+      checkPath: false,
+      envVersion,
+      width: 280
+    });
+    return { ok: true, image: Buffer.from(res.buffer).toString('base64') };
+  } catch (err) {
+    console.error('生成小程序码失败', err);
+    return { ok: false, message: '生成小程序码失败，请稍后再试' };
+  }
 }

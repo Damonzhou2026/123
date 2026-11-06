@@ -2,6 +2,7 @@ const { timeAgo, distanceText } = require('../../utils/format');
 const { askMessageNotify } = require('../../utils/notify');
 const { report } = require('../../utils/report');
 const { shareTitle } = require('../../utils/share');
+const { drawPoster } = require('../../utils/poster');
 
 const CLAIM_STATUS_TEXT = {
   pending: '已提交，等待拾得者确认',
@@ -75,6 +76,56 @@ Page({
       title: post ? shareTitle(post) : '掉了么：拍张照，帮丢的东西回家',
       path: `/pages/item/item?id=${this.postId}`
     };
+  },
+
+  // 生成寻物海报：可以发朋友圈，或者存下来发小红书、抖音、QQ。别人用微信扫海报上的码就能打开这条发布
+  async makePoster() {
+    const post = this.data.post;
+    if (!post || this.posterBusy) return;
+    this.posterBusy = true;
+    wx.showLoading({ title: '正在生成海报', mask: true });
+    try {
+      if (!this.posterPath) {
+        const { envVersion } = wx.getAccountInfoSync().miniProgram;
+        const { result } = await wx.cloud.callFunction({ name: 'getPost', data: { action: 'shareCode', id: this.postId, envVersion } });
+        if (!result.ok) throw new Error(result.message);
+        const codePath = `${wx.env.USER_DATA_PATH}/share-${this.postId}.png`;
+        wx.getFileSystemManager().writeFileSync(codePath, result.image, 'base64');
+        const fileID = (post.photos || [])[0];
+        const photoPath = fileID ? await wx.cloud.downloadFile({ fileID }).then((r) => r.tempFilePath).catch(() => '') : '';
+        const canvas = await new Promise((resolve) => {
+          wx.createSelectorQuery().select('#poster').fields({ node: true }).exec((res) => resolve(res[0] && res[0].node));
+        });
+        if (!canvas) throw new Error('海报画不出来，请更新微信再试');
+        this.posterPath = await drawPoster(canvas, post, photoPath, codePath);
+      }
+      wx.hideLoading();
+      this.showPoster();
+    } catch (err) {
+      wx.hideLoading();
+      wx.showToast({ title: err.message || '生成失败，请重试', icon: 'none' });
+    } finally {
+      this.posterBusy = false;
+    }
+  },
+
+  // 微信自带的图片菜单：发给朋友、保存到相册、收藏，不用申请相册权限
+  showPoster() {
+    const path = this.posterPath;
+    if (wx.showShareImageMenu) {
+      wx.showShareImageMenu({ path, fail: () => wx.previewImage({ urls: [path] }) });
+    } else {
+      wx.previewImage({ urls: [path] });
+    }
+  },
+
+  // 复制一段话，粘贴到 QQ、短信或其他 App；别人在微信里搜“掉了么”就能找到
+  copyText() {
+    const post = this.data.post;
+    if (!post) return;
+    const reward = post.type === 'lost' && post.reward > 0 ? `失主愿意给感谢金 ${post.reward} 元。` : '';
+    const text = `${shareTitle(post)}。${reward}见到了请打开微信，搜索小程序“掉了么”联系我，谢谢！`;
+    wx.setClipboardData({ data: text, success: () => wx.showToast({ title: '已复制，去粘贴吧', icon: 'none' }) });
   },
 
   // 续期：发布 30 天后还在找；过期下架的重新上架

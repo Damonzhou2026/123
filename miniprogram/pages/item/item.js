@@ -25,7 +25,8 @@ Page({
   },
 
   onLoad(query) {
-    this.id = query.id;
+    // 寻物海报上的小程序码进来时，发布 id 在 scene 里
+    this.id = query.id || decodeURIComponent(query.scene || '');
     // 从“先登记失物”回来时带着刚发布的失物 id
     this.lostId = query.lostId || '';
     this.load();
