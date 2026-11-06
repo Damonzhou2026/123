@@ -62,9 +62,14 @@
       <view wx:if="{{matches.length === 0}}" class="quiet hint">
         发布已经生效。有新的{{isLost ? '拾得者' : '失主'}}上传时，我们会第一时间提醒你。
       </view>
-      <button class="btn {{isLost ? 'btn-lost' : 'btn-found'}} share-btn" open-type="share">
-        {{isLost ? '转发到班级群、宿舍群，让大家帮忙留意' : '转发到群里，帮它找主人'}}
-      </button>
+      <view class="share">
+        <view class="share-title">{{isLost ? '让更多人帮你留意' : '让更多人帮它找主人'}}</view>
+        <button class="btn {{isLost ? 'btn-lost' : 'btn-found'}} share-btn" open-type="share">转发给微信好友或群</button>
+        <view class="share-row">
+          <view class="share-item" bindtap="makePoster">生成海报<text class="quiet">朋友圈、小红书、抖音</text></view>
+          <view class="share-item" bindtap="copyText">复制文字<text class="quiet">QQ、短信、其他 App</text></view>
+        </view>
+      </view>
 
       <view wx:for="{{matches}}" wx:key="_id" class="card match {{index === 0 ? 'match-top' : ''}}">
         <view class="match-head">
@@ -92,4 +97,7 @@
       </view>
     </block>
   </block>
+
+  <!-- 画海报用，不显示在页面上 -->
+  <canvas type="2d" id="poster" class="poster-canvas"></canvas>
 </view>

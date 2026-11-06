@@ -98,7 +98,7 @@ function distanceBetween(p, q) {
 }
 
 function publicPost(post) {
-  return { _id: post._id, type: post.type, status: post.status, title: post.title, placeName: post.placeName || '', photos: post.photos, matchedClaimId: post.matchedClaimId || '', blockReason: post.blockReason || '' };
+  return { _id: post._id, type: post.type, status: post.status, title: post.title, placeName: post.placeName || '', reward: post.reward || 0, photos: post.photos, matchedClaimId: post.matchedClaimId || '', blockReason: post.blockReason || '' };
 }
 
 function claimStatusFor(claims, foundPostId) {
