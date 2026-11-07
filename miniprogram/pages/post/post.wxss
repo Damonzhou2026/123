@@ -53,6 +53,17 @@
 .photo-title { font-weight: 500; }
 
 .field { margin-bottom: 28rpx; }
+.textarea {
+  width: 100%;
+  min-height: 160rpx;
+  padding: 24rpx 28rpx;
+  box-sizing: border-box;
+  border: 1rpx solid var(--line);
+  border-radius: 24rpx;
+  background: var(--card);
+  font-size: 30rpx;
+  line-height: 1.5;
+}
 .label { font-size: 26rpx; color: var(--quiet); margin-bottom: 12rpx; }
 .input {
   height: 96rpx;

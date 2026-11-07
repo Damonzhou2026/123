@@ -60,6 +60,7 @@ exports.main = async (event) => {
       title: c.title,
       category: c.category,
       photos: c.photos,
+      description: c.description || '',
       placeName: c.placeName,
       createdAt: c.createdAt,
       distance: c.distance != null ? c.distance : distanceBetween(post.location, c.location),

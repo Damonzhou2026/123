@@ -19,6 +19,7 @@ const SAME_CONSTANTS = [
   [['miniprogram/utils/constants.js', 'CATEGORIES'], ['cloudfunctions/createPost/index.js', 'CATEGORIES']],
   [['miniprogram/utils/constants.js', 'NO_REWARD_CATEGORIES'], ['cloudfunctions/createPost/index.js', 'NO_REWARD_CATEGORIES']],
   [['miniprogram/utils/constants.js', 'MAX_REWARD'], ['cloudfunctions/createPost/index.js', 'MAX_REWARD']],
+  [['miniprogram/utils/constants.js', 'MAX_DESCRIPTION'], ['cloudfunctions/createPost/index.js', 'MAX_DESCRIPTION']],
   [['miniprogram/utils/constants.js', 'MAX_CUSTOM_CATEGORY'], ['cloudfunctions/createPost/index.js', 'MAX_CUSTOM_CATEGORY'], ['cloudfunctions/tag/index.js', 'MAX_CUSTOM_CATEGORY']],
   [['miniprogram/utils/constants.js', 'CATEGORIES'], ['cloudfunctions/tag/index.js', 'CATEGORIES']],
   [['miniprogram/utils/constants.js', 'PRIVATE_PHOTO_CATEGORIES'], ['cloudfunctions/listNearby/index.js', 'PRIVATE_PHOTO_CATEGORIES'], ['cloudfunctions/getPost/index.js', 'PRIVATE_PHOTO_CATEGORIES']],
