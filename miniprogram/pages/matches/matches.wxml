@@ -38,7 +38,8 @@
       <view class="summary">{{claims.length}} 个人来认领</view>
       <view wx:for="{{claims}}" wx:key="_id" class="card claim">
         <view class="photos">
-          <image class="photo photo-lost" src="{{item.lostPhoto}}" mode="aspectFill" />
+          <image wx:if="{{item.lostPhoto}}" class="photo photo-lost" src="{{item.lostPhoto}}" mode="aspectFill" />
+          <view wx:else class="photo photo-lost photo-none">对方没传照片</view>
           <image class="photo photo-found" src="{{myPhoto}}" mode="aspectFill" />
         </view>
         <view class="quiet">你的问题：{{item.question}}</view>
@@ -73,10 +74,13 @@
           <text class="quiet">{{item.distanceText}} · {{item.timeText}}</text>
         </view>
         <view class="photos">
-          <image class="photo photo-lost" src="{{isLost ? myPhoto : item.photos[0]}}" mode="aspectFill" />
-          <image class="photo photo-found" src="{{isLost ? item.photos[0] : myPhoto}}" mode="aspectFill" />
+          <image wx:if="{{isLost ? myPhoto : item.photos[0]}}" class="photo photo-lost" src="{{isLost ? myPhoto : item.photos[0]}}" mode="aspectFill" />
+          <view wx:else class="photo photo-lost photo-none">{{isLost ? '你没传照片' : '对方没传照片'}}</view>
+          <image wx:if="{{isLost ? item.photos[0] : myPhoto}}" class="photo photo-found" src="{{isLost ? item.photos[0] : myPhoto}}" mode="aspectFill" />
+          <view wx:else class="photo photo-found photo-none">照片不公开</view>
         </view>
         <view class="match-title">{{item.title}}</view>
+        <view wx:if="{{item.description}}" class="quiet match-desc">{{item.description}}</view>
         <view class="match-foot">
           <text class="quiet">{{item.placeName}}</text>
           <text class="quiet report-link" catchtap="report" data-type="post" data-id="{{item._id}}">举报</text>

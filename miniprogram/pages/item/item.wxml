@@ -19,6 +19,7 @@
         <text class="title">{{item.title}}</text>
       </view>
       <view class="quiet">{{item.customCategory || item.category}} · {{item.placeName}} · {{timeText}}</view>
+      <view wx:if="{{item.description}}" class="desc">{{item.description}}</view>
       <view wx:if="{{item.type === 'lost' && item.reward > 0}}" class="reward">失主愿意给感谢金 ¥{{item.reward}}</view>
       <view wx:if="{{item.type === 'found' && item.handover.type === 'deposited'}}" class="quiet">
         已交到{{item.isMine ? '：' + item.handover.place : '服务台、宿管或保安室，核验通过后告诉你具体地点'}}

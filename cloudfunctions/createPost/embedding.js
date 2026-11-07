@@ -20,6 +20,9 @@ const DASHSCOPE_MODEL = 'tongyi-embedding-vision-plus-2026-03-06';
 const ZHIPU_CHAT_URL = 'https://open.bigmodel.cn/api/paas/v4/chat/completions';
 const ZHIPU_EMBED_URL = 'https://open.bigmodel.cn/api/paas/v4/embeddings';
 const ZHIPU_VISION_MODEL = 'glm-4.6v-flash';
+// 免费模型被限流时改用的付费看图模型（同一家，描述转出来的向量还能和以前的比）。
+// 每条发布不到 1 分钱，需要智谱账户里有余额。环境变量 ZHIPU_FALLBACK_MODEL 可以换成别的，填 off 关掉
+const ZHIPU_FALLBACK_MODEL = 'glm-4.6v-flashx';
 const ZHIPU_EMBED_MODEL = 'embedding-3';
 const DESCRIBE_PROMPT = '这些照片拍的是同一件失物或捡到的物品。请只描述物品本身，不要描述背景、手和环境。'
   + '按顺序写：物品种类、颜色、品牌或上面的文字、材质、形状大小、明显特征（挂件、贴纸、划痕、磨损等）。'
@@ -90,12 +93,57 @@ function parseZhipuText(body) {
   return typeof content === 'string' && content.trim() ? content.trim().slice(0, 300) : '';
 }
 
-// 免费模型并发有限，被限流（HTTP 429）时等一下再试一次
+// 被限流：HTTP 429，或智谱错误码 1302（账户并发超了）、1305（模型整体太忙）
+function isRateLimited(res) {
+  if (!res) return false;
+  if (res.status === 429) return true;
+  const err = res.body && (res.body.error || res.body);
+  return !!err && ['1302', '1305'].includes(String(err.code));
+}
+
+// 免费模型并发有限，被限流时等一下再试一次
 async function postWithRetry(url, apiKey, payload) {
   const res = await postJson(url, apiKey, payload);
-  if (res.status !== 429) return res;
+  if (!isRateLimited(res)) return res;
   await new Promise((r) => setTimeout(r, 1500));
   return postJson(url, apiKey, payload);
+}
+
+function fallbackModel() {
+  const name = (process.env.ZHIPU_FALLBACK_MODEL || ZHIPU_FALLBACK_MODEL).trim();
+  return name && name !== 'off' && name !== ZHIPU_VISION_MODEL ? name : '';
+}
+
+// 先用免费模型看图；重试后还被限流，就换付费的备用模型看一次。
+// 只在限流时换：超时不换，否则可能超过云函数 60 秒的时限，超时的交给定时补跑
+async function describePhotos(apiKey, images) {
+  const payload = (model) => ({
+    model,
+    messages: [{
+      role: 'user',
+      content: [
+        ...images.map((b64) => ({ type: 'image_url', image_url: { url: b64 } })),
+        { type: 'text', text: DESCRIBE_PROMPT }
+      ]
+    }],
+    thinking: { type: 'disabled' },
+    temperature: 0.1
+  });
+  const chat = await postWithRetry(ZHIPU_CHAT_URL, apiKey, payload(ZHIPU_VISION_MODEL));
+  const backup = fallbackModel();
+  if (!isRateLimited(chat) || !backup) return { chat, model: ZHIPU_VISION_MODEL };
+  return { chat: await postJson(ZHIPU_CHAT_URL, apiKey, payload(backup)), model: backup };
+}
+
+// 一段文字变成向量。看图写的描述和失主自己写的描述用同一个模型，所以能互相比
+async function zhipuTextEmbedding(apiKey, text) {
+  const embed = await postWithRetry(ZHIPU_EMBED_URL, apiKey, {
+    model: ZHIPU_EMBED_MODEL,
+    input: text,
+    dimensions: DIMENSION
+  });
+  const vector = parseZhipuEmbedding(embed.body);
+  return { vector, error: vector ? '' : describeError('智谱向量', embed) };
 }
 
 // 每张照片各算一个向量（不同角度都能比）。失败的照片跳过。
@@ -114,7 +162,7 @@ async function dashscopeEmbeddings(apiKey, cloud, fileIDs) {
     return vector;
   }));
   const embeddings = results.filter(Boolean);
-  return { source: 'dashscope', embeddings, description: '', error: embeddings.length ? '' : (errors[0] || '没有可用的照片') };
+  return { source: 'dashscope', embeddings, description: '', model: DASHSCOPE_MODEL, error: embeddings.length ? '' : (errors[0] || '没有可用的照片') };
 }
 
 // 所有照片一起看一次，写一段描述，再变成一个向量。
@@ -122,49 +170,44 @@ async function dashscopeEmbeddings(apiKey, cloud, fileIDs) {
 async function zhipuEmbeddings(apiKey, cloud, fileIDs) {
   const files = await Promise.all(fileIDs.map((fileID) => cloud.downloadFile({ fileID }).catch(() => null)));
   const images = files.filter((f) => f && f.fileContent).map((f) => f.fileContent.toString('base64'));
-  if (images.length === 0) return { source: 'zhipu', embeddings: [], description: '', error: '下载照片失败' };
+  if (images.length === 0) return { source: 'zhipu', embeddings: [], description: '', model: '', error: '下载照片失败' };
 
-  const chat = await postWithRetry(ZHIPU_CHAT_URL, apiKey, {
-    model: ZHIPU_VISION_MODEL,
-    messages: [{
-      role: 'user',
-      content: [
-        ...images.map((b64) => ({ type: 'image_url', image_url: { url: b64 } })),
-        { type: 'text', text: DESCRIBE_PROMPT }
-      ]
-    }],
-    thinking: { type: 'disabled' },
-    temperature: 0.1
-  });
+  const { chat, model } = await describePhotos(apiKey, images);
   const description = parseZhipuText(chat.body);
   if (!description) {
-    return { source: 'zhipu', embeddings: [], description: '', error: describeError('智谱看图', chat) };
+    return { source: 'zhipu', embeddings: [], description: '', model, error: describeError(`智谱看图（${model}）`, chat) };
   }
 
-  const embed = await postWithRetry(ZHIPU_EMBED_URL, apiKey, {
-    model: ZHIPU_EMBED_MODEL,
-    input: description,
-    dimensions: DIMENSION
-  });
-  const vector = parseZhipuEmbedding(embed.body);
-  return {
-    source: 'zhipu',
-    embeddings: vector ? [vector] : [],
-    description,
-    error: vector ? '' : describeError('智谱向量', embed)
-  };
+  const { vector, error } = await zhipuTextEmbedding(apiKey, description);
+  return { source: 'zhipu', embeddings: vector ? [vector] : [], description, model, error };
 }
 
-async function fetchEmbeddings(cloud, fileIDs) {
-  const empty = { source: '', embeddings: [], description: '', error: '' };
-  if (!Array.isArray(fileIDs) || fileIDs.length === 0) return empty;
+// 没有照片的失物：把失主写的名称和描述直接变成向量，和拾得者照片的 AI 描述比
+async function zhipuTextOnly(apiKey, text) {
+  const { vector, error } = await zhipuTextEmbedding(apiKey, text);
+  return { source: 'zhipu', embeddings: vector ? [vector] : [], description: text, model: 'text', error };
+}
+
+// fileIDs：照片；text：没有照片时用来匹配的文字（失主写的描述），有照片时不用
+async function fetchEmbeddings(cloud, fileIDs, text) {
+  const empty = { source: '', embeddings: [], description: '', model: '', error: '' };
+  const photos = Array.isArray(fileIDs) ? fileIDs : [];
+  const words = typeof text === 'string' ? text.trim() : '';
+  if (photos.length === 0 && !words) return empty;
   try {
-    if (process.env.DASHSCOPE_API_KEY) return await dashscopeEmbeddings(process.env.DASHSCOPE_API_KEY, cloud, fileIDs);
-    if (process.env.ZHIPU_API_KEY) return await zhipuEmbeddings(process.env.ZHIPU_API_KEY.trim(), cloud, fileIDs);
+    if (process.env.DASHSCOPE_API_KEY) {
+      // 百炼的图片向量和文字向量不在一个尺度上，没照片时就只按类别、距离、时间匹配
+      if (photos.length === 0) return empty;
+      return await dashscopeEmbeddings(process.env.DASHSCOPE_API_KEY, cloud, photos);
+    }
+    if (process.env.ZHIPU_API_KEY) {
+      const key = process.env.ZHIPU_API_KEY.trim();
+      return photos.length ? await zhipuEmbeddings(key, cloud, photos) : await zhipuTextOnly(key, words);
+    }
   } catch (err) {
     return { ...empty, error: `出错：${err.message}`.slice(0, 200) };
   }
   return empty;
 }
 
-module.exports = { fetchEmbeddings, parseDashscope, parseZhipuEmbedding, parseZhipuText, describeError };
+module.exports = { fetchEmbeddings, parseDashscope, parseZhipuEmbedding, parseZhipuText, describeError, isRateLimited, fallbackModel };

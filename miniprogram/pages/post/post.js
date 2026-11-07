@@ -1,4 +1,4 @@
-const { PRIVATE_PHOTO_CATEGORIES, CATEGORIES, OTHER_CATEGORY, MAX_CUSTOM_CATEGORY, NO_REWARD_CATEGORIES, MAX_REWARD, MAX_PHOTOS } = require('../../utils/constants');
+const { PRIVATE_PHOTO_CATEGORIES, CATEGORIES, OTHER_CATEGORY, MAX_CUSTOM_CATEGORY, NO_REWARD_CATEGORIES, MAX_REWARD, MAX_PHOTOS, MAX_DESCRIPTION } = require('../../utils/constants');
 const { askMessageNotify } = require('../../utils/notify');
 
 // 拾得者把东西放在哪。选“其他”要自己填地点，前三个可以补充一句（比如几号楼）
@@ -19,6 +19,9 @@ Page({
     photoPaths: [],
     maxPhotos: MAX_PHOTOS,
     title: '',
+    // 物品描述：失主没有照片时必填，AI 用它来匹配
+    description: '',
+    maxDescription: MAX_DESCRIPTION,
     placeName: '',
     latitude: null,
     longitude: null,
@@ -88,6 +91,7 @@ Page({
   },
 
   onTitle(e) { this.setData({ title: e.detail.value }); },
+  onDescription(e) { this.setData({ description: e.detail.value }); },
   onVerify(e) { this.setData({ verifyQuestion: e.detail.value }); },
   onSpot(e) { this.setData({ spot: e.currentTarget.dataset.value }); },
   onDepositPlace(e) { this.setData({ depositPlace: e.detail.value }); },
@@ -140,7 +144,8 @@ Page({
 
   validate() {
     const d = this.data;
-    if (d.photoPaths.length === 0) return '请先上传照片';
+    if (!d.isLost && d.photoPaths.length === 0) return '请先拍一张捡到的东西';
+    if (d.isLost && d.photoPaths.length === 0 && !d.description.trim()) return '没有照片的话，请描述一下它的样子';
     if (!d.title.trim()) return '请填写物品名称';
     if (this.isOtherCategory() && !d.customCategory.trim()) return '请填写具体是什么东西';
     if (d.latitude == null) return '请选择位置';
@@ -174,6 +179,7 @@ Page({
           category: d.categories[d.categoryIndex],
           customCategory: this.isOtherCategory() ? d.customCategory.trim() : '',
           photos: uploads.map((u) => u.fileID),
+          description: d.description.trim(),
           placeName: d.placeName,
           latitude: d.latitude,
           longitude: d.longitude,

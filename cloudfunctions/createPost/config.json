@@ -1,5 +1,12 @@
 {
   "timeout": 60,
+  "triggers": [
+    {
+      "name": "retryVision",
+      "type": "timer",
+      "config": "0 */10 * * * * *"
+    }
+  ],
   "permissions": {
     "openapi": [
       "security.msgSecCheck",

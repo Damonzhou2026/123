@@ -2,7 +2,7 @@
   <view wx:if="{{photoPaths.length === 0}}" class="photo" bindtap="choosePhoto">
     <view class="photo-empty">
       <view class="photo-title">{{isLost ? '上传物品照片' : '拍一张捡到的东西'}}</view>
-      <view class="quiet">{{isLost ? '以前拍的照片、同款网图都可以' : '证件号、卡号等信息请遮挡后再拍'}}</view>
+      <view class="quiet">{{isLost ? '以前拍的照片、同款网图都可以；没有照片就在下面写描述' : '证件号、卡号等信息请遮挡后再拍'}}</view>
     </view>
   </view>
   <view wx:else class="photo-grid">
@@ -17,6 +17,13 @@
   <view class="field">
     <view class="label">物品名称</view>
     <input class="input" placeholder="比如：一串钥匙，挂着小熊" value="{{title}}" bindinput="onTitle" maxlength="40" />
+  </view>
+
+  <view class="field">
+    <view class="label">{{isLost && photoPaths.length === 0 ? '描述一下它的样子（没有照片时必填）' : '描述（选填）'}}</view>
+    <textarea class="textarea" placeholder="{{isLost ? '颜色、牌子、上面的字、挂件贴纸、划痕等，AI 会拿它去和捡到的东西比对' : '补充照片里看不出来的特征'}}"
+              value="{{description}}" bindinput="onDescription" maxlength="{{maxDescription}}" auto-height />
+    <view wx:if="{{isLost && photoPaths.length === 0}}" class="quiet hint">写得越具体，越容易被认出来。不要写只有你知道的细节，留着认领时核验用。</view>
   </view>
 
   <view class="field">

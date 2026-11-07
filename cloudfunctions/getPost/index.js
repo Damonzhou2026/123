@@ -26,6 +26,7 @@ exports.main = async (event) => {
     title: post.title,
     category: post.category,
     customCategory: post.customCategory || '',
+    description: post.description || '',
     placeName: post.placeName || '',
     latitude: location ? location.latitude : null,
     longitude: location ? location.longitude : null,

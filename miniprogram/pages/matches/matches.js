@@ -57,7 +57,7 @@ Page({
         postStatus: result.post.status,
         matchedClaimId: result.post.matchedClaimId,
         blockReason: result.post.blockReason || '',
-        myPhoto: result.post.photos[0],
+        myPhoto: (result.post.photos || [])[0] || '',
         post: result.post,
         matches,
         claims

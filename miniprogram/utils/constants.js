@@ -20,11 +20,14 @@ const MESSAGE_TEMPLATE_ID = 'hBMhed6IMwA5n-jwsSYO1ZUUEL7AB9VUPa71JrQl_xA';
 // 感谢金上限（元），和 cloudfunctions/createPost 里的 MAX_REWARD 保持一致
 const MAX_REWARD = 10000;
 
-// 每条发布最多几张照片，和 cloudfunctions/createPost 的校验（1～3 张）保持一致
+// 每条发布最多几张照片，和 cloudfunctions/createPost 的校验保持一致（捡到 1～3 张，丢了 0～3 张）
 const MAX_PHOTOS = 3;
+
+// 物品描述最多几个字，和 cloudfunctions/createPost 的 MAX_DESCRIPTION 保持一致
+const MAX_DESCRIPTION = 100;
 
 // 防丢贴二维码里的网址前缀，后面接 8 位编号。域名备案好、在公众平台配好“扫普通链接二维码打开小程序”后填上，
 // 比如 'https://diaoleme.cn/t/?c='。留空时运营页只导出编号，测试先用小程序码
 const TAG_LINK_PREFIX = '';
 
-module.exports = { TAG_LINK_PREFIX, PRIVATE_PHOTO_CATEGORIES, CATEGORIES, OTHER_CATEGORY, MAX_CUSTOM_CATEGORY, NO_REWARD_CATEGORIES, MAX_REWARD, MAX_PHOTOS, ESCROW_ENABLED, MESSAGE_TEMPLATE_ID };
+module.exports = { TAG_LINK_PREFIX, PRIVATE_PHOTO_CATEGORIES, CATEGORIES, OTHER_CATEGORY, MAX_CUSTOM_CATEGORY, NO_REWARD_CATEGORIES, MAX_REWARD, MAX_PHOTOS, MAX_DESCRIPTION, ESCROW_ENABLED, MESSAGE_TEMPLATE_ID };
